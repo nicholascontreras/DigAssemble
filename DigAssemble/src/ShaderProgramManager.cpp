@@ -1,8 +1,9 @@
 #include "ShaderProgramManager.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 
 std::unordered_map<std::string, unsigned int> ShaderProgramManager::programs;
 std::string ShaderProgramManager::activeProgram;
@@ -30,6 +31,33 @@ unsigned int ShaderProgramManager::compileShader(const std::string& shaderFile) 
     return shaderId;
 }
 
+void ShaderProgramManager::setActiveProgram(const std::string& programName) {
+    if(programName != activeProgram) {
+        glUseProgram(programs.at(programName));
+        activeProgram = programName;
+    }
+}
+
+void ShaderProgramManager::setBool(const std::string& name, const bool& value) {
+    setInt(name, (int)value);
+}
+
+void ShaderProgramManager::setInt(const std::string& name, const int& value) {
+    glUniform1i(getUniformLocation(name), value);
+}
+
+void ShaderProgramManager::setFloat(const std::string& name, const float& value) {
+    glUniform1f(getUniformLocation(name), value);
+}
+
+void ShaderProgramManager::setMat4(const std::string& name, const glm::mat4& value) {
+    glUniformMatrix4fv(getUniformLocation(name), 1, false, glm::value_ptr(value));
+}
+
+void ShaderProgramManager::setVec3(const std::string& name, const glm::vec3& value) {
+    glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+
 void ShaderProgramManager::compileProgram(const std::string& programName) {
     unsigned int vertShaderId = compileShader(programName + ".vert");
     unsigned int fragShaderId = compileShader(programName + ".frag");
@@ -48,21 +76,6 @@ void ShaderProgramManager::compileProgram(const std::string& programName) {
     programs.emplace(programName, programId);
 }
 
-void ShaderProgramManager::setActiveProgram(const std::string& programName) {
-    if(programName != activeProgram) {
-        glUseProgram(programs.at(programName));
-        activeProgram = programName;
-    }
-}
-
-void ShaderProgramManager::setBool(const std::string& name, bool value) {
-    glUniform1i(glGetUniformLocation(programs.at(activeProgram), name.c_str()), (int)value);
-}
-
-void ShaderProgramManager::setInt(const std::string& name, int value) {
-    glUniform1i(glGetUniformLocation(programs.at(activeProgram), name.c_str()), value);
-}
-
-void ShaderProgramManager::setFloat(const std::string& name, float value) {
-    glUniform1f(glGetUniformLocation(programs.at(activeProgram), name.c_str()), value);
+unsigned int ShaderProgramManager::getUniformLocation(const std::string& name) {
+    return glGetUniformLocation(programs.at(activeProgram), name.c_str());
 }

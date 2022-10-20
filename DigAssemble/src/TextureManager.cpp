@@ -1,7 +1,8 @@
 #include "TextureManager.h"
 
-#include "stb_image.h"
+#include <stdexcept>
 
+#include "stb_image.h"
 #include "glad/glad.h"
 
 std::unordered_map<std::string, unsigned int> TextureManager::textures;
@@ -25,12 +26,33 @@ void TextureManager::generateTexture(const std::string& textureName) {
 
     stbi_image_free(data);
 
-    textures.emplace(textureName, textureId);
+    addTextureToMap(textureName, textureId);
+}
+
+void TextureManager::generateTexture(const std::string& textureName, const unsigned int& width, const unsigned int& height, unsigned char* const& textureData) {
+    unsigned int textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    activeTexture = textureName;
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, textureData);
+
+    addTextureToMap(textureName, textureId);
 }
 
 void TextureManager::bindTexture(const std::string& textureName) {
     if(textureName != activeTexture) {
         glBindTexture(GL_TEXTURE_2D, textures.at(textureName));
         activeTexture = textureName;
+    }
+}
+
+void TextureManager::addTextureToMap(const std::string& textureName, const unsigned int& textureId) {
+    if(textures.count(textureName)) {
+        throw std::invalid_argument("The given name is already in use!");
+    } else {
+        textures.emplace(textureName, textureId);
     }
 }
