@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
+#include <Windows.h>
 
 #include "util/debug.h"
 #include "Camera.h"
@@ -13,14 +15,27 @@
 #include "ShaderProgramManager.h"
 #include "TextureManager.h"
 #include "UIText.h"
-#include "blocks/Block.h"
+#include "world/World.h"
+#include "world/blocks/Block.h"
+
+Camera camera(1);
 
 void GLAPIENTRY handleError(unsigned int source, unsigned int type, unsigned int id, unsigned int severity, int length, const char* message, const void* userParam) {
-    throw message;
+    UNREFERENCED_PARAMETER(source);
+    UNREFERENCED_PARAMETER(type);
+    UNREFERENCED_PARAMETER(id);
+    UNREFERENCED_PARAMETER(severity);
+    UNREFERENCED_PARAMETER(length);
+    UNREFERENCED_PARAMETER(userParam);
+
+    throw std::runtime_error(message);
 };
 
 void framebufferSizeChanged(GLFWwindow* window, int width, int height) {
+    UNREFERENCED_PARAMETER(window);
+
     glViewport(0, 0, width, height);
+    camera.setAspectRatio((float) width / height);
 }
 
 void processInput(GLFWwindow *window) {
@@ -42,6 +57,9 @@ void assertTypes() {
 }
 
 int main(int argc, char** argv) {
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
     glfwInit();
 
     assertTypes();
@@ -52,7 +70,7 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Window Title", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(600, 600, "Window Title", nullptr, nullptr);
     if (window == nullptr) {
         Debug("Failed to create GLFW window");
         return -1;
@@ -75,48 +93,33 @@ int main(int argc, char** argv) {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(handleError, nullptr);
 
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, 600, 600);
     glfwSetFramebufferSizeCallback(window, framebufferSizeChanged);
 
     ShaderProgramManager::compileProgram("triangle");
+    ShaderProgramManager::compileProgram("text");
     TextureManager::generateTexture("container");
 
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    Block::init();
 
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, Block::numVertices * sizeof(float) * 5, Block::vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    Block block(0, 0, 0);
-    Camera camera;
+    World world;
+    world.setBlock(new Block(0, 0, 0));
 
     UIText::init();
-
-    ShaderProgramManager::setActiveProgram("triangle");
-    ShaderProgramManager::setMat4("projection", camera.getProjectionMat());
-
-    TextureManager::bindTexture("container");
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        ShaderProgramManager::setMat4("view", camera.getViewMat());
-        ShaderProgramManager::setMat4("model", block.getModelMat());  
-
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, Block::numVertices);
+        ShaderProgramManager::setActiveProgram("triangle");
+        ShaderProgramManager::setMat4("projection", camera.getProjectionMat());
+        ShaderProgramManager::setMat4("view", camera.getViewMat());
+        
+        world.draw();
 
-        UIText::drawText("hello", 100, 100)
+        //UIText::drawText("hello", 100, 100, 48, glm::vec3(1.0f, 0.0f, 0.0f));
 
         glfwSwapBuffers(window);
         glfwPollEvents();

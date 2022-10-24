@@ -9,7 +9,7 @@
 
 class UIText {
 public:
-    static bool init();
+    static void init();
     static void drawText(const std::string& text, const int& x, const int& y, const int& size, const glm::vec3& color);
 
 private:
