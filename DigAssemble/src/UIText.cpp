@@ -6,8 +6,11 @@
 
 #include <glad/glad.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "ShaderProgramManager.h"
 #include "TextureManager.h"
+#include "GameWindow.h"
 
 
 const std::string UIText::TEXTURE_PREFIX = "char_";
@@ -49,66 +52,51 @@ void UIText::init() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, false, 4 * sizeof(float), 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
     ShaderProgramManager::compileProgram("text");
 }
 
-void UIText::drawText(const std::string& text, const int& x, const int& y, const int& size, const glm::vec3& color) {
+void UIText::drawText(const std::string& text, int x,  int y, int size, const glm::vec3& textColor) {
 
     float scale = (float)size / LOADING_SIZE;
 
     ShaderProgramManager::setActiveProgram("text");
-    ShaderProgramManager::setVec3("textColor", color);
+    ShaderProgramManager::setVec3("textColor", textColor);
+    ShaderProgramManager::setMat4("projection", glm::ortho(0.0f, (float)GameWindow::getWidth(), (float)GameWindow::getHeight(), 0.0f, -1.0f, 1.0f));
 
     glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    int curX = x;
     for(std::string::const_iterator curCharItr = text.begin(); curCharItr != text.end(); curCharItr++) {
         CharacterInfo curCharInfo = characters.at(*curCharItr);
 
-        float posX = curX + curCharInfo.bearing.x * scale;
-        float poxY = y - (curCharInfo.size.y - curCharInfo.bearing.y) * scale;
+        float quadX = x + (curCharInfo.bearing.x * scale);
+        float quadY = y + ((curCharInfo.size.y - curCharInfo.bearing.y) * scale);
 
-        float w = curCharInfo.size.x * scale;
-        float h = curCharInfo.size.y * scale;
-        // update VBO for each character
-        //float vertices[6][4] = {
-        //    { posX,     poxY + h,   0.0f, 0.0f },
-        //    { posX,     poxY,       0.0f, 1.0f },
-        //    { posX + w, poxY,       1.0f, 1.0f },
-
-        //    { posX,     poxY + h,   0.0f, 0.0f },
-        //    { posX + w, poxY,       1.0f, 1.0f },
-        //    { posX + w, poxY + h,   1.0f, 0.0f }
-        //};
-        float vertices[6][4] = {
-            { 0,     0,   0.0f, 0.0f },
-            { 0,     20,       0.0f, 1.0f },
-            { 20, 20,       1.0f, 1.0f },
-
-            { 0,     0,   0.0f, 0.0f },
-            { 20, 20,       1.0f, 1.0f },
-            { 20, 0,   1.0f, 0.0f }
-        };
-        // render glyph texture over quad
-        TextureManager::bindTexture(TEXTURE_PREFIX + *curCharItr);
-        // update content of VBO memory
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        float quadW = curCharInfo.size.x * scale;
+        float quadH = curCharInfo.size.y * scale;
         
-        // render quad
+        float vertices[6][4] = {
+            { quadX,         quadY,           0.0f, 1.0f },
+            { quadX + quadW, quadY,           1.0f, 1.0f },
+            { quadX + quadW, quadY - quadH,   1.0f, 0.0f },
+
+            { quadX,         quadY,           0.0f, 1.0f },
+            { quadX + quadW, quadY - quadH,   1.0f, 0.0f },
+            { quadX,         quadY - quadH,   0.0f, 0.0f }
+        };
+
+        TextureManager::bindTexture(TEXTURE_PREFIX + *curCharItr);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
         // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        curX += (int) ((curCharInfo.advance >> 6) * scale); // bitshift by 6 to get value in pixels (2^6 = 64)
+        x += (int) ((curCharInfo.advance >> 6) * scale); // bitshift by 6 to get value in pixels (2^6 = 64)
     }
 
-    glBindVertexArray(0);
 }
 
 bool UIText::loadChar(const FT_Face& fontFace, const char& c) {

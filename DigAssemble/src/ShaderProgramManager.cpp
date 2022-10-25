@@ -58,6 +58,10 @@ void ShaderProgramManager::setVec3(const std::string& name, const glm::vec3& val
     glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(value));
 }
 
+void ShaderProgramManager::setVec4(const std::string& name, const glm::vec4& value) {
+    glUniform4fv(getUniformLocation(name), 1, glm::value_ptr(value));
+}
+
 void ShaderProgramManager::compileProgram(const std::string& programName) {
     unsigned int vertShaderId = compileShader(programName + ".vert");
     unsigned int fragShaderId = compileShader(programName + ".frag");

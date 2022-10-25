@@ -10,7 +10,7 @@
 class UIText {
 public:
     static void init();
-    static void drawText(const std::string& text, const int& x, const int& y, const int& size, const glm::vec3& color);
+    static void drawText(const std::string& text, int x, int y, int size, const glm::vec3& textColor);
 
 private:
     struct CharacterInfo {

@@ -2,8 +2,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-Camera::Camera(float aspectRatio) :
-    x(1.5), y(0.5), z(5.5), angleLR(0), angleUD(0), aspectRatio(aspectRatio) {
+Camera::Camera() :
+    x(1.5), y(0.5), z(5.5), angleLR(0), angleUD(0), aspectRatio(1) {
 }
 
 void Camera::setAspectRatio(float newAspectRatio) {

@@ -15,6 +15,7 @@ public:
     static void setFloat(const std::string& name, const float& value);
     static void setMat4(const std::string& name, const glm::mat4& value);
     static void setVec3(const std::string& name, const glm::vec3& value);
+    static void setVec4(const std::string& name, const glm::vec4& value);
     
 private:
     static std::unordered_map<std::string, unsigned int> programs;

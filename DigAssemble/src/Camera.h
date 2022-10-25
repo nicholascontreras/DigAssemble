@@ -4,7 +4,7 @@
 
 class Camera {
 public:
-    Camera(float aspectRatio);
+    Camera();
 
     void setAspectRatio(float newAspectRatio);
 
