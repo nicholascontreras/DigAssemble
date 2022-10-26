@@ -5,7 +5,8 @@
 class FPSCounter {
 public:
     static void recordFrame();
-    static double getFrameTime();
+    static double getAvgFrameTime();
+    static double getPrevFrameTime();
     static int getFPS();
     static void delayForFPS(int fps);
 private:

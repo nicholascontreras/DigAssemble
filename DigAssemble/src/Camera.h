@@ -8,6 +8,13 @@ public:
 
     void setAspectRatio(float newAspectRatio);
 
+    void rotateLR(float amount);
+    void rotateUD(float amount);
+
+    inline float getAngleLR() { return angleLR; };
+
+    void setCameraPos(float newX, float newY, float newZ);
+
     glm::mat4 getViewMat() const;
     glm::mat4 getProjectionMat() const;
 private:

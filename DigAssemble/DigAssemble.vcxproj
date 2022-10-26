@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\world\Player.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\util\FPSCounter.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="src\world\World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\world\Player.h" />
     <ClInclude Include="src\GameWindow.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\util\FPSCounter.h" />
@@ -168,6 +170,7 @@
     <ClInclude Include="src\TextureManager.h" />
     <ClInclude Include="src\UIText.h" />
     <ClInclude Include="src\world\World.h" />
+    <ClInclude Include="src\world\worldgen.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\text.frag" />

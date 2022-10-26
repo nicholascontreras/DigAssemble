@@ -14,8 +14,9 @@ void FPSCounter::recordFrame() {
     while(timestamps.front() < time - MAX_HISTORY_AGE) {
         timestamps.pop_front();
     }
-}
-double FPSCounter::getFrameTime() {
+};
+
+double FPSCounter::getAvgFrameTime() {
     if(timestamps.size() < 2) {
         return 0;
     } else {
@@ -23,16 +24,28 @@ double FPSCounter::getFrameTime() {
     }
 };
 
+double FPSCounter::getPrevFrameTime() {
+    if(timestamps.size() < 2) {
+        return 0;
+    } else {
+        return timestamps.back() - *std::prev(std::prev(timestamps.end()));
+    }
+};
+
 int FPSCounter::getFPS() {
     if(timestamps.size() < 2) {
         return 0;
     } else {
-        return (int)(1 / getFrameTime());
+        return (int)(1 / getAvgFrameTime());
     }
-}
+};
+
 void FPSCounter::delayForFPS(int fps) {
-    if(getFPS() > fps) {
-        double delay = (1.0 / fps) - getFrameTime();
+    double targetFrameTime = 1.0 / fps;
+    double actualFrameTime = getPrevFrameTime();
+
+    if (actualFrameTime < targetFrameTime) {
+        double delay = targetFrameTime - actualFrameTime;
         int nanoseconds = (int)(delay * 1000000000);
         std::this_thread::sleep_for(std::chrono::nanoseconds(nanoseconds));
     }

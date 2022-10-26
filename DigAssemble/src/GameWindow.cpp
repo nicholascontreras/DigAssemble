@@ -11,12 +11,19 @@
 #include "world/World.h"
 #include "UIText.h"
 #include "util/FPSCounter.h"
+#include "world/worldgen.h"
 
 Camera GameWindow::camera;
+Player GameWindow::player;
+
 int GameWindow::width = 800, GameWindow::height = 600;
+float GameWindow::mouseX = NAN, GameWindow::mouseY = NAN;
+bool GameWindow::showMouse = false;
 
 void GameWindow::run() {
-    glfwInit();
+    if(!glfwInit()) {
+        throw std::runtime_error("Failed to initialize GLFW!");
+    }
 
     assertTypes();
 
@@ -28,28 +35,33 @@ void GameWindow::run() {
 
     GLFWwindow* window = glfwCreateWindow(width, height, "Window Title", nullptr, nullptr);
     if(window == nullptr) {
-        throw std::runtime_error("Failed to create GLFW window");
+        throw std::runtime_error("Failed to create GLFW window!");
     }
     glfwMakeContextCurrent(window);
 
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        throw std::runtime_error("Failed to initialize GLAD");
+        throw std::runtime_error("Failed to initialize GLAD!");
     }
 
     Debug(glGetString(GL_VERSION));
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(handleError, nullptr);
 
     glEnable(GL_DEPTH_TEST);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(handleError, nullptr);
-
     glViewport(0, 0, width, height);
     glfwSetFramebufferSizeCallback(window, windowSizeChanged);
     camera.setAspectRatio((float)width / height);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mousePositionChanged);
+
+    glfwSetKeyCallback(window, keyStateChanged);
 
     ShaderProgramManager::compileProgram("triangle");
     ShaderProgramManager::compileProgram("text");
@@ -58,14 +70,14 @@ void GameWindow::run() {
     Block::init();
     UIText::init();
 
-    World world;
-    world.setBlock(new Block(0, 0, 0));
+    World world = worldgen::generateWorld();
 
     while(!glfwWindowShouldClose(window)) {
-        processInput(window);
-
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        camera.setCameraPos(player.getX(), player.getY(), player.getZ());
+        player.setDirectionFacing(camera.getAngleLR());
 
         ShaderProgramManager::setActiveProgram("triangle");
         ShaderProgramManager::setMat4("projection", camera.getProjectionMat());
@@ -76,10 +88,10 @@ void GameWindow::run() {
         UIText::drawText("FPS: " + std::to_string(FPSCounter::getFPS()), 10, 20, 20, glm::vec3(0.0f, 0.0f, 0.0f));
 
         glfwSwapBuffers(window);
-        FPSCounter::recordFrame();
-
         glfwPollEvents();
+        handleContinuousKeys(window);
 
+        FPSCounter::recordFrame();
         FPSCounter::delayForFPS(60);
     }
 
@@ -116,7 +128,7 @@ void GLAPIENTRY GameWindow::handleError(unsigned int source, unsigned int type, 
     UNREFERENCED_PARAMETER(userParam);
 
     throw std::runtime_error(message);
-};
+}
 
 void GameWindow::windowSizeChanged(GLFWwindow* window, int newWidth, int newHeight) {
     UNREFERENCED_PARAMETER(window);
@@ -128,8 +140,51 @@ void GameWindow::windowSizeChanged(GLFWwindow* window, int newWidth, int newHeig
     height = newHeight;
 }
 
-void GameWindow::processInput(GLFWwindow* window) {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
+void GameWindow::mousePositionChanged(GLFWwindow* window, double posX, double posY) {
+    UNREFERENCED_PARAMETER(window);
+
+    if(showMouse) {
+        // If the mouse is moved while the cursor is being shown (not controlling the camera)...
+        // ...clear out previous positions and prevent any camera movement
+        mouseX = NAN;
+        mouseY = NAN;
+        return;
+    }
+
+    bool firstTime = isnan(mouseX);
+
+    float newMouseX = (float)posX;
+    float newMouseY = (float)posY;
+
+    if(!firstTime) {
+        float mouseSensitvity = 0.1f;
+        camera.rotateLR((mouseX - newMouseX) * mouseSensitvity);
+        camera.rotateUD((mouseY - newMouseY) * mouseSensitvity);
+    }
+
+    mouseX = newMouseX;
+    mouseY = newMouseY;
+}
+
+void GameWindow::keyStateChanged(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    UNREFERENCED_PARAMETER(scancode);
+    UNREFERENCED_PARAMETER(mods);
+
+    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        showMouse = !showMouse;
+        glfwSetInputMode(window, GLFW_CURSOR, showMouse ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+    }
+}
+
+void GameWindow::handleContinuousKeys(GLFWwindow* window) {
+    if(showMouse) {
+        return;
+    }
+
+    float forwardBackwardMovementSpeed = 0.01f;
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        player.moveForwardBackwards(forwardBackwardMovementSpeed);
+    } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        player.moveForwardBackwards(-forwardBackwardMovementSpeed);
     }
 }

@@ -19,6 +19,10 @@ World::~World() {
     }
 }
 
+World::World(World&& other) noexcept : World() {
+    swap(*this, other);
+}
+
 bool World::isBlock(int x, int y, int z) {
     // unordered_map does not have a "contains key" method but does have a "count key" function
     // because keys must be unique this function either returns 0 or 1 (false or true)
@@ -30,7 +34,7 @@ void World::setBlock(Block* b) {
         blocks.emplace(b->x, std::unordered_map<int, std::unordered_map<int, Block*>>());
     }
     if(!blocks.at(b->x).count(b->y)) {
-        blocks.at(b->x).emplace(b->x, std::unordered_map<int, Block*>());
+        blocks.at(b->x).emplace(b->y, std::unordered_map<int, Block*>());
     }
     blocks.at(b->x).at(b->y).emplace(b->z, b);
 }
@@ -58,4 +62,9 @@ void World::draw() {
             }
         }
     }
+}
+
+void swap(World& first, World& second) {
+    using std::swap;
+    swap(first.blocks, second.blocks);
 }

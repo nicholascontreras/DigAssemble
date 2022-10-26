@@ -10,9 +10,11 @@ public:
     ~World();
 
     World(const World& other) = delete;
-    World(World&& other) = delete;
+    World(World&& other) noexcept;
     World& operator=(const World& other) = delete;
     World& operator=(World&& other) = delete;
+
+    friend void swap(World& first, World& second);
 
     bool isBlock(int x, int y, int z);
     void setBlock(Block* b);
