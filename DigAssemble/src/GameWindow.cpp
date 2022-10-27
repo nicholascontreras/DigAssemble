@@ -49,6 +49,7 @@ void GameWindow::run() {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(handleError, nullptr);
 
+    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glEnable(GL_BLEND);
@@ -181,10 +182,24 @@ void GameWindow::handleContinuousKeys(GLFWwindow* window) {
         return;
     }
 
-    float forwardBackwardMovementSpeed = 0.01f;
+    float forwardBackwardMovementSpeed = 0.03f;
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         player.moveForwardBackwards(forwardBackwardMovementSpeed);
     } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         player.moveForwardBackwards(-forwardBackwardMovementSpeed);
+    }
+
+    float leftRightMovementSpeed = 0.02f;
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        player.strafeLeftRight(leftRightMovementSpeed);
+    } else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        player.strafeLeftRight(-leftRightMovementSpeed);
+    }
+
+    float flyUpDownSpeed = 0.03f;
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        player.flyUpDown(flyUpDownSpeed);
+    } else if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        player.flyUpDown(-flyUpDownSpeed);
     }
 }

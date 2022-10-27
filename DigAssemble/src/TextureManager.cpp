@@ -11,6 +11,8 @@ std::string TextureManager::activeTexture;
 void TextureManager::generateTexture(const std::string& textureName) {
     std::string textureFileName = "textures/" + textureName + ".png";
 
+    stbi_set_flip_vertically_on_load(true);
+
     int width = -1, height = -1, numChannels = -1;
     unsigned char* data = stbi_load(textureFileName.c_str(), &width, &height, &numChannels, 0);
 

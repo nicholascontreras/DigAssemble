@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Camera::Camera() :
-    x(0.5), y(0.5), z(0.5), angleLR(0), angleUD(0), aspectRatio(NAN) {
+    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN) {
 }
 
 void Camera::setAspectRatio(float newAspectRatio) {
@@ -12,10 +12,12 @@ void Camera::setAspectRatio(float newAspectRatio) {
 
 void Camera::rotateLR(float amount) {
     angleLR += amount;
+    angleLR = fmodf(angleLR, 360);
 }
 
 void Camera::rotateUD(float amount) {
     angleUD += amount;
+    angleUD = fmaxf(fminf(angleUD, 89), -89);
 }
 
 void Camera::setCameraPos(float newX, float newY, float newZ) {

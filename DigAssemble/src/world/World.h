@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unordered_map>
+#include <map>
 
 #include "blocks/Block.h"
 
@@ -22,6 +22,6 @@ public:
 
     void draw();
 private:
-    std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, Block*>>> blocks;
+    std::map<int, std::map<int, std::map<int, Block*>>> blocks;
 };
 
