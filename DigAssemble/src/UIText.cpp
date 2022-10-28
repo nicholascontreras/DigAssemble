@@ -8,8 +8,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "ShaderProgramManager.h"
-#include "TextureManager.h"
+#include "managers/ShaderProgramManager.h"
+#include "managers/TextureManager.h"
 #include "GameWindow.h"
 
 

@@ -4,7 +4,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-Player::Player() : x(0.5), y(0.5), z(0.5), angleLR(NAN) {
+Player::Player() : x(0), y(0), z(5), angleLR(NAN) {
 }
 
 void Player::moveForwardBackwards(float amount) {

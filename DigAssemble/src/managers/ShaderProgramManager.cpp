@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 
 #include <fstream>
+#include <stdexcept>
 #include <glm/gtc/type_ptr.hpp>
 
 std::unordered_map<std::string, unsigned int> ShaderProgramManager::programs;
@@ -63,6 +64,10 @@ void ShaderProgramManager::setVec4(const std::string& name, const glm::vec4& val
 }
 
 void ShaderProgramManager::compileProgram(const std::string& programName) {
+    if(programs.count(programName)) {
+        throw std::invalid_argument("The given program name is already compiled!");
+    }
+
     unsigned int vertShaderId = compileShader(programName + ".vert");
     unsigned int fragShaderId = compileShader(programName + ".frag");
 

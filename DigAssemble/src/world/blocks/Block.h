@@ -1,17 +1,27 @@
 #pragma once
 
+#include <string>
 #include <glm/glm.hpp>
 
 class Block {
 public:
-    const int x, y, z;
+    static const unsigned int NUM_VERTICES = 36, VERTICES_PER_FACE = 6, ELEMENTS_PER_VERTEX = 5;
+    
+    static unsigned int getNumFaceVertices();
 
-    static void init();
+    Block(const std::string& textureName);
 
-    Block(int x, int y, int z);
-
-    void draw() const;
+    void appendPosXFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
+    void appendNegXFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
+    void appendPosYFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
+    void appendNegYFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
+    void appendPosZFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
+    void appendNegZFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
 private:
-    static unsigned int VAO, VBO;
+    static const float VERTICES[];
+
+    const std::string textureName;
+
+    void appendFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation, unsigned int offset);
 };
 

@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 
-#include "stb_image.h"
-#include "glad/glad.h"
+#include <stb_image.h>
+#include <glad/glad.h>
 
 std::unordered_map<std::string, unsigned int> TextureManager::textures;
 std::string TextureManager::activeTexture;

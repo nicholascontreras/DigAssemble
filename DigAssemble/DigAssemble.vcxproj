@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\world\Chunk.cpp" />
     <ClCompile Include="src\world\Player.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -149,13 +150,15 @@
     <ClCompile Include="src\world\blocks\Block.cpp" />
     <ClCompile Include="src\glad\glad.c" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\ShaderProgramManager.cpp" />
+    <ClCompile Include="src\managers\ShaderProgramManager.cpp" />
     <ClCompile Include="src\stb_image\stb_image.cpp" />
-    <ClCompile Include="src\TextureManager.cpp" />
+    <ClCompile Include="src\managers\TextureManager.cpp" />
     <ClCompile Include="src\UIText.cpp" />
     <ClCompile Include="src\world\World.cpp" />
+    <ClCompile Include="src\managers\TextureMapManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\world\Chunk.h" />
     <ClInclude Include="src\world\Player.h" />
     <ClInclude Include="src\GameWindow.h" />
     <ClInclude Include="src\Camera.h" />
@@ -165,12 +168,13 @@
     <ClInclude Include="lib\glad\include\khr\khrplatform.h" />
     <ClInclude Include="lib\glfw-3.3.8\include\glfw\glfw3.h" />
     <ClInclude Include="lib\glfw-3.3.8\include\glfw\glfw3native.h" />
-    <ClInclude Include="src\ShaderProgramManager.h" />
+    <ClInclude Include="src\managers\ShaderProgramManager.h" />
     <ClInclude Include="src\util\debug.h" />
-    <ClInclude Include="src\TextureManager.h" />
+    <ClInclude Include="src\managers\TextureManager.h" />
     <ClInclude Include="src\UIText.h" />
     <ClInclude Include="src\world\World.h" />
     <ClInclude Include="src\world\worldgen.h" />
+    <ClInclude Include="src\managers\TextureMapManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\text.frag" />

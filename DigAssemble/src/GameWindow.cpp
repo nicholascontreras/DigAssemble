@@ -5,8 +5,8 @@
 #include <thread>
 
 #include "util/debug.h"
-#include "ShaderProgramManager.h"
-#include "TextureManager.h"
+#include "managers/ShaderProgramManager.h"
+#include "managers/TextureMapManager.h"
 #include "world/blocks/Block.h"
 #include "world/World.h"
 #include "UIText.h"
@@ -65,10 +65,8 @@ void GameWindow::run() {
     glfwSetKeyCallback(window, keyStateChanged);
 
     ShaderProgramManager::compileProgram("triangle");
-    ShaderProgramManager::compileProgram("text");
-    TextureManager::generateTexture("container");
+    TextureMapManager::generateTextureMap("blocks");
 
-    Block::init();
     UIText::init();
 
     World world = worldgen::generateWorld();

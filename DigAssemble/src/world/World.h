@@ -3,6 +3,7 @@
 #include <map>
 
 #include "blocks/Block.h"
+#include "Chunk.h"
 
 class World {
 public:
@@ -16,12 +17,13 @@ public:
 
     friend void swap(World& first, World& second);
 
-    bool isBlock(int x, int y, int z);
-    void setBlock(Block* b);
-    Block* getBlock(int x, int y, int z);
+    bool chunkExists(int x, int y, int z);
+    Chunk& getChunk(int x, int y, int z);
 
     void draw();
 private:
-    std::map<int, std::map<int, std::map<int, Block*>>> blocks;
+    static const unsigned int STARTING_SIZE = 2;
+
+    std::map<int, std::map<int, std::map<int, Chunk>>> chunks;
 };
 
