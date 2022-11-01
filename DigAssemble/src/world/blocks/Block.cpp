@@ -86,7 +86,7 @@ void Block::appendNegZFace(float* geometry, unsigned int& geometrySizeUsed, cons
 void Block::appendFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation, unsigned int offset) {
     
     glm::vec4 textureBox = TextureMapManager::getTextureCoords("blocks", textureName);
-    
+
     for(int i = 0; i < VERTICES_PER_FACE; i++) {
         glm::vec3 translatedCoords = translation * glm::vec4(VERTICES[offset], VERTICES[offset + 1], VERTICES[offset + 2], 1);
         float texU = (VERTICES[offset + 3] * (textureBox[2] - textureBox[0])) + textureBox[0];

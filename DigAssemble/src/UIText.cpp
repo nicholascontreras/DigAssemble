@@ -107,7 +107,7 @@ bool UIText::loadChar(const FT_Face& fontFace, const char& c) {
     }
 
     std::string textureName = TEXTURE_PREFIX;
-    TextureManager::generateTexture(TEXTURE_PREFIX + c, fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows, fontFace->glyph->bitmap.buffer);
+    TextureManager::generateTexture(TEXTURE_PREFIX + c, fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows, 1, fontFace->glyph->bitmap.buffer);
 
     CharacterInfo character = {
         glm::ivec2(fontFace->glyph->bitmap.width, fontFace->glyph->bitmap.rows),

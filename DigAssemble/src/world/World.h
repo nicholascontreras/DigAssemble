@@ -17,13 +17,16 @@ public:
 
     friend void swap(World& first, World& second);
 
-    bool chunkExists(int x, int y, int z);
-    Chunk& getChunk(int x, int y, int z);
+    bool blockExists(int x, int y, int z);
+    Block* getBlock(int x, int y, int z);
+    void setBlock(int x, int y, int z, Block* b);
 
     void draw();
+    void buildAllGeometry();
 private:
-    static const unsigned int STARTING_SIZE = 2;
+    std::map<int, std::map<int, std::map<int, Chunk*>>> chunks;
 
-    std::map<int, std::map<int, std::map<int, Chunk>>> chunks;
+    bool chunkExists(int x, int y, int z);
+    Chunk* getChunk(int x, int y, int z);
 };
 

@@ -16,6 +16,10 @@ void TextureManager::generateTexture(const std::string& textureName) {
     int width = -1, height = -1, numChannels = -1;
     unsigned char* data = stbi_load(textureFileName.c_str(), &width, &height, &numChannels, 0);
 
+    if(numChannels != 4) {
+        throw std::runtime_error("Texture images must be RGBA!");
+    }
+
     unsigned int textureId;
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -31,7 +35,20 @@ void TextureManager::generateTexture(const std::string& textureName) {
     addTextureToMap(textureName, textureId);
 }
 
-void TextureManager::generateTexture(const std::string& textureName, const unsigned int& width, const unsigned int& height, unsigned char* const& textureData) {
+void TextureManager::generateTexture(const std::string& textureName, unsigned int width, unsigned int height, unsigned int channels, const unsigned char* textureData) {
+    unsigned int imgType = 0;
+    switch(channels) {
+    case 1:
+        imgType = GL_RED;
+        break;
+    case 4:
+        imgType = GL_RGBA;
+        break;
+    default:
+        throw std::invalid_argument("Invalid number of channels!");
+    }
+    
+    
     unsigned int textureId;
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -39,7 +56,7 @@ void TextureManager::generateTexture(const std::string& textureName, const unsig
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, textureData);
+    glTexImage2D(GL_TEXTURE_2D, 0, imgType, width, height, 0, imgType, GL_UNSIGNED_BYTE, textureData);
 
     addTextureToMap(textureName, textureId);
 }
@@ -51,7 +68,7 @@ void TextureManager::bindTexture(const std::string& textureName) {
     }
 }
 
-void TextureManager::addTextureToMap(const std::string& textureName, const unsigned int& textureId) {
+void TextureManager::addTextureToMap(const std::string& textureName, unsigned int textureId) {
     if(textures.count(textureName)) {
         throw std::invalid_argument("The given name is already in use!");
     } else {

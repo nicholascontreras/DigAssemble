@@ -6,7 +6,7 @@
 
 class Chunk {
 public:
-    static const unsigned int SIZE = 4;
+    static const int SIZE = 16;
 
     Chunk();
     ~Chunk();
@@ -18,11 +18,11 @@ public:
     friend void swap(Chunk& first, Chunk& second);
 
     bool isInBounds(int x, int y, int z);
-    bool isBlock(int x, int y, int z);
+    bool blockExists(int x, int y, int z);
     Block* getBlock(int x, int y, int z);
+    void setBlock(int x, int y, int z, Block* b);
 
     void buildGeometry();
-
     void draw();
 private:
     static const unsigned int geometryConstructionBufferSize = Block::NUM_VERTICES * Block::ELEMENTS_PER_VERTEX * SIZE * SIZE * SIZE;

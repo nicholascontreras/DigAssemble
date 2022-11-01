@@ -16,7 +16,7 @@ private:
     static const std::string TEXTURE_NAME_PREFIX;
 
     struct TextureMapData {
-        unsigned int width = 0, height = 0;
+        int width = 0, height = 0;
         std::unordered_map<std::string, glm::vec3> textureLocations;
     };
 

@@ -158,6 +158,7 @@
     <ClCompile Include="src\managers\TextureMapManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\util\math_utils.h" />
     <ClInclude Include="src\world\Chunk.h" />
     <ClInclude Include="src\world\Player.h" />
     <ClInclude Include="src\GameWindow.h" />

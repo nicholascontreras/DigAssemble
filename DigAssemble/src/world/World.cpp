@@ -6,45 +6,85 @@
 
 #include "../managers/ShaderProgramManager.h"
 #include "../managers/TextureMapManager.h"
+#include "../util/math_utils.h"
 
 World::World() {
-    chunks.emplace(0, std::map<int, std::map<int, Chunk>>());
-    chunks.at(0).emplace(0, std::map<int, Chunk>());
-    chunks.at(0).at(0).emplace(0, Chunk());
 }
 
 World::~World() {
+    for(const auto& x : chunks) {
+        for(const auto& y : chunks.at(x.first)) {
+            for(const auto& z : chunks.at(x.first).at(y.first)) {
+                delete z.second;
+            }
+        }
+    }
 }
 
 World::World(World&& other) noexcept : World() {
     swap(*this, other);
 }
 
-bool World::chunkExists(int x, int y, int z) {
-    return chunks.count(x) && chunks.at(x).count(y) && chunks.at(x).at(y).count(z);
+bool World::blockExists(int x, int y, int z) {
+    if(chunkExists(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))) {
+        return getChunk(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))->blockExists(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE));
+    }
+    return false;
 }
 
-Chunk& World::getChunk(int x, int y, int z) {
-    return chunks.at(x).at(y).at(z);
+Block* World::getBlock(int x, int y, int z) {
+    return getChunk(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))->getBlock(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE));
+}
+
+void World::setBlock(int x, int y, int z, Block* b) {
+    getChunk(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))->setBlock(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE), b);
 }
 
 void World::draw() {
     TextureMapManager::bindTextureMap("blocks");
 
-    for(int x = 0; x < 4; x++) {
-        glm::mat4 matX = glm::translate(glm::mat4(1.0f), glm::vec3(x * Chunk::SIZE, 0, 0));
-        for(int y = 0; y < 4; y++) {
-            glm::mat4 matXY = glm::translate(matX, glm::vec3(0, y * Chunk::SIZE, 0));
-            for(int z = 0; z < 4; z++) {
-                if(chunkExists(x, y, z)) {
-                    glm::mat4 matXYZ = glm::translate(matXY, glm::vec3(0, 0, z * Chunk::SIZE));
+    for(const auto& x : chunks) {
+        glm::mat4 matX = glm::translate(glm::mat4(1.0f), glm::vec3(x.first * Chunk::SIZE, 0, 0));
+        for(const auto& y : chunks.at(x.first)) {
+            glm::mat4 matXY = glm::translate(matX, glm::vec3(0, y.first * Chunk::SIZE, 0));
+            for(const auto& z : chunks.at(x.first).at(y.first)) {
+                if(chunkExists(x.first, y.first, z.first)) {
+                    glm::mat4 matXYZ = glm::translate(matXY, glm::vec3(0, 0, z.first * Chunk::SIZE));
                     ShaderProgramManager::setActiveProgram("triangle");
                     ShaderProgramManager::setMat4("model", matXYZ);
-                    getChunk(x, y, z).draw();
+                    getChunk(x.first, y.first, z.first)->draw();
                 }
             }
         }
     }
+}
+
+void World::buildAllGeometry() {
+    for(const auto& x : chunks) {
+        for(const auto& y : chunks.at(x.first)) {
+            for(const auto& z : chunks.at(x.first).at(y.first)) {
+                z.second->buildGeometry();
+            }
+        }
+    }
+}
+
+bool World::chunkExists(int x, int y, int z) {
+    return chunks.count(x) && chunks.at(x).count(y) && chunks.at(x).at(y).count(z);
+}
+
+Chunk* World::getChunk(int x, int y, int z) {
+    if(!chunks.count(x)) {
+        chunks.emplace(x, std::map<int, std::map<int, Chunk*>>());
+    }
+    if(!chunks.at(x).count(y)) {
+        chunks.at(x).emplace(y, std::map<int, Chunk*>());
+    }
+    if(!chunks.at(x).at(y).count(z)) {
+        chunks.at(x).at(y).emplace(z, new Chunk());
+    }
+
+    return chunks.at(x).at(y).at(z);
 }
 
 void swap(World& first, World& second) {

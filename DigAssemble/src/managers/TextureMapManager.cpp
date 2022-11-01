@@ -22,27 +22,24 @@ void TextureMapManager::generateTextureMap(const std::string& textureMapName) {
         std::string filePath = curFile.path().string();
         std::string fileName = curFile.path().stem().string();
 
-        int widthSigned = -1, heightSigned = -1, numChannels = -1;
-        unsigned char* data = stbi_load(filePath.c_str(), &widthSigned, &heightSigned, &numChannels, 0);
+        int width = -1, height = -1, numChannels = -1;
+        unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &numChannels, 0);
 
         if(numChannels != 4) {
             throw std::runtime_error("TextureMap images must be RGBA!");
         }
 
-        unsigned int width = (unsigned int)widthSigned;
-        unsigned int height = (unsigned int)heightSigned;
-
         if(width > textureMapData.width) {
             expandWidth(textureMap, textureMapData, width);
         }
 
-        expandHeight(textureMap, textureMapData, textureMapData.height + height + 1);
+        expandHeight(textureMap, textureMapData, textureMapData.height + height);
 
-        unsigned int startingRow = (unsigned int) textureMap.size() - height;
-        for(unsigned int y = 0; y < height; y++) {
+        int startingRow = (int) textureMap.size() - height;
+        for(int y = 0; y < height; y++) {
             std::vector<glm::vec4>& curRow = textureMap.at((size_t)startingRow + y);
-            for(unsigned int x = 0; x < width; x++) {
-                unsigned int dataPos = (y * width * 4) + (x * 4);
+            for(int x = 0; x < width; x++) {
+                int dataPos = (y * width * 4) + (x * 4);
                 curRow.at(x) = glm::vec4(data[dataPos], data[dataPos + 1], data[dataPos + 2], data[dataPos + 3]);
             }
         }
@@ -52,7 +49,7 @@ void TextureMapManager::generateTextureMap(const std::string& textureMapName) {
     }
 
     unsigned char* textureMapBytes = flattenTextureMap(textureMap);
-    TextureManager::generateTexture(TEXTURE_NAME_PREFIX + textureMapName, textureMapData.width, textureMapData.height, textureMapBytes);
+    TextureManager::generateTexture(TEXTURE_NAME_PREFIX + textureMapName, textureMapData.width, textureMapData.height, 4, textureMapBytes);
     delete[] textureMapBytes;
     
     textureMaps.emplace(textureMapName, textureMapData);
@@ -88,13 +85,13 @@ unsigned char* TextureMapManager::flattenTextureMap(const std::vector<std::vecto
         throw std::invalid_argument("What's 9 + 10? 21. You stupid.");
     }
     
-    unsigned int width = (unsigned int) textureMap.at(0).size();
-    unsigned int flattenedLength = (unsigned int) textureMap.size() * width * 4;
+    int width = (int) textureMap.at(0).size();
+    int flattenedLength = (int) textureMap.size() * width * 4;
     unsigned char* flattened = new unsigned char[flattenedLength];
 
-    for(unsigned int i = 0; i < flattenedLength; i++) {
-        unsigned int x = (i / 4) % width;
-        unsigned int y = (i / 4) / width;
+    for(int i = 0; i < flattenedLength; i++) {
+        int x = (i / 4) % width;
+        int y = (i / 4) / width;
         flattened[i] = (unsigned char) textureMap.at(y).at(x)[i % 4];
     }
 

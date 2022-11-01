@@ -7,6 +7,7 @@
 #include "util/debug.h"
 #include "managers/ShaderProgramManager.h"
 #include "managers/TextureMapManager.h"
+#include "managers/TextureManager.h"
 #include "world/blocks/Block.h"
 #include "world/World.h"
 #include "UIText.h"
@@ -72,23 +73,27 @@ void GameWindow::run() {
     World world = worldgen::generateWorld();
 
     while(!glfwWindowShouldClose(window)) {
-        glClearColor(1, 1, 1, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        camera.setCameraPos(player.getX(), player.getY(), player.getZ());
-        player.setDirectionFacing(camera.getAngleLR());
-
-        ShaderProgramManager::setActiveProgram("triangle");
-        ShaderProgramManager::setMat4("projection", camera.getProjectionMat());
-        ShaderProgramManager::setMat4("view", camera.getViewMat());
-
-        world.draw();
-
-        UIText::drawText("FPS: " + std::to_string(FPSCounter::getFPS()), 10, 20, 20, glm::vec3(0.0f, 0.0f, 0.0f));
-
-        glfwSwapBuffers(window);
+        
         glfwPollEvents();
-        handleContinuousKeys(window);
+
+        if(width > 0) {
+            glClearColor(1, 1, 1, 1);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            camera.setCameraPos(player.getX(), player.getY(), player.getZ());
+            player.setDirectionFacing(camera.getAngleLR());
+
+            ShaderProgramManager::setActiveProgram("triangle");
+            ShaderProgramManager::setMat4("projection", camera.getProjectionMat());
+            ShaderProgramManager::setMat4("view", camera.getViewMat());
+
+            world.draw();
+
+            UIText::drawText("FPS: " + std::to_string(FPSCounter::getFPS()), 10, 20, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+
+            glfwSwapBuffers(window);
+            handleContinuousKeys(window);
+        }
 
         FPSCounter::recordFrame();
         FPSCounter::delayForFPS(60);
