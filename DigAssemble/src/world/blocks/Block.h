@@ -18,6 +18,7 @@ public:
     void appendPosZFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
     void appendNegZFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
 private:
+    static const float H0, H1, H2, H3, H4, V0, V1, V2, V3;
     static const float VERTICES[];
 
     const std::string textureName;

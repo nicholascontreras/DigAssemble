@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <stdexcept>
-#include <thread>
 
 #include "util/debug.h"
 #include "managers/ShaderProgramManager.h"
@@ -12,7 +11,9 @@
 #include "world/World.h"
 #include "UIText.h"
 #include "util/FPSCounter.h"
-#include "world/worldgen.h"
+#include "world/world_gen.h"
+#include "util/math_utils.h"
+#include "util/GLThread.h"
 
 Camera GameWindow::camera;
 Player GameWindow::player;
@@ -38,47 +39,56 @@ void GameWindow::run() {
     if(window == nullptr) {
         throw std::runtime_error("Failed to create GLFW window!");
     }
-    glfwMakeContextCurrent(window);
 
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        throw std::runtime_error("Failed to initialize GLAD!");
-    }
+    GLThread::call([&]() {
+        glfwMakeContextCurrent(window);
+        if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+            throw std::runtime_error("Failed to initialize GLAD!");
+        }
 
-    Debug(glGetString(GL_VERSION));
+        Debug(glGetString(GL_VERSION));
 
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(handleError, nullptr);
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(handleError, nullptr);
 
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glViewport(0, 0, width, height);
-    glfwSetFramebufferSizeCallback(window, windowSizeChanged);
-    camera.setAspectRatio((float)width / height);
+        glViewport(0, 0, width, height);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mousePositionChanged);
+        glfwSetFramebufferSizeCallback(window, windowSizeChanged);
+        camera.setAspectRatio((float)width / height);
 
-    glfwSetKeyCallback(window, keyStateChanged);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPosCallback(window, mousePositionChanged);
+
+        glfwSetKeyCallback(window, keyStateChanged);
+    });
 
     ShaderProgramManager::compileProgram("triangle");
     TextureMapManager::generateTextureMap("blocks");
 
     UIText::init();
 
-    World world = worldgen::generateWorld();
-
+    World world = worldgen::generateWorld(0);
+    
     while(!glfwWindowShouldClose(window)) {
         
-        glfwPollEvents();
+        GLThread::call([]() {
+            glfwPollEvents();
+        });
+
+        worldgen::expandWorldIfNeeded(world, Chunk::at(player.getX()), Chunk::at(player.getY()), Chunk::at(player.getZ()), 6);
 
         if(width > 0) {
-            glClearColor(1, 1, 1, 1);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            GLThread::call([&]() {
+                glClearColor(1, 1, 1, 1);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            });
 
             camera.setCameraPos(player.getX(), player.getY(), player.getZ());
             player.setDirectionFacing(camera.getAngleLR());
@@ -91,8 +101,10 @@ void GameWindow::run() {
 
             UIText::drawText("FPS: " + std::to_string(FPSCounter::getFPS()), 10, 20, 20, glm::vec3(0.0f, 0.0f, 0.0f));
 
-            glfwSwapBuffers(window);
-            handleContinuousKeys(window);
+            GLThread::call([&]() {
+                glfwSwapBuffers(window);
+                handleContinuousKeys(window);
+            });
         }
 
         FPSCounter::recordFrame();
@@ -101,6 +113,8 @@ void GameWindow::run() {
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    GLThread::join();
 }
 
 int GameWindow::getWidth() {
@@ -185,21 +199,21 @@ void GameWindow::handleContinuousKeys(GLFWwindow* window) {
         return;
     }
 
-    float forwardBackwardMovementSpeed = 0.03f;
+    float forwardBackwardMovementSpeed = 0.2f;
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         player.moveForwardBackwards(forwardBackwardMovementSpeed);
     } else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         player.moveForwardBackwards(-forwardBackwardMovementSpeed);
     }
 
-    float leftRightMovementSpeed = 0.02f;
+    float leftRightMovementSpeed = 0.1f;
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         player.strafeLeftRight(leftRightMovementSpeed);
     } else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         player.strafeLeftRight(-leftRightMovementSpeed);
     }
 
-    float flyUpDownSpeed = 0.03f;
+    float flyUpDownSpeed = 0.2f;
     if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
         player.flyUpDown(flyUpDownSpeed);
     } else if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {

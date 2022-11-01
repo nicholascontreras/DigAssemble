@@ -8,7 +8,7 @@
 #include "../managers/TextureMapManager.h"
 #include "../util/math_utils.h"
 
-World::World() {
+World::World(int seed) : seed(seed) {
 }
 
 World::~World() {
@@ -21,8 +21,26 @@ World::~World() {
     }
 }
 
-World::World(World&& other) noexcept : World() {
+World::World(World&& other) noexcept : World(this->seed) {
     swap(*this, other);
+}
+
+bool World::chunkExists(int x, int y, int z) {
+    return chunks.count(x) && chunks.at(x).count(y) && chunks.at(x).at(y).count(z);
+}
+
+Chunk* World::getChunk(int x, int y, int z) {
+    if(!chunks.count(x)) {
+        chunks.emplace(x, std::map<int, std::map<int, Chunk*>>());
+    }
+    if(!chunks.at(x).count(y)) {
+        chunks.at(x).emplace(y, std::map<int, Chunk*>());
+    }
+    if(!chunks.at(x).at(y).count(z)) {
+        chunks.at(x).at(y).emplace(z, new Chunk());
+    }
+
+    return chunks.at(x).at(y).at(z);
 }
 
 bool World::blockExists(int x, int y, int z) {
@@ -67,24 +85,6 @@ void World::buildAllGeometry() {
             }
         }
     }
-}
-
-bool World::chunkExists(int x, int y, int z) {
-    return chunks.count(x) && chunks.at(x).count(y) && chunks.at(x).at(y).count(z);
-}
-
-Chunk* World::getChunk(int x, int y, int z) {
-    if(!chunks.count(x)) {
-        chunks.emplace(x, std::map<int, std::map<int, Chunk*>>());
-    }
-    if(!chunks.at(x).count(y)) {
-        chunks.at(x).emplace(y, std::map<int, Chunk*>());
-    }
-    if(!chunks.at(x).at(y).count(z)) {
-        chunks.at(x).at(y).emplace(z, new Chunk());
-    }
-
-    return chunks.at(x).at(y).at(z);
 }
 
 void swap(World& first, World& second) {

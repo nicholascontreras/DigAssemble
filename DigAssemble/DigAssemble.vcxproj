@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\util\GLThread.cpp" />
     <ClCompile Include="src\world\Chunk.cpp" />
     <ClCompile Include="src\world\Player.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
@@ -158,7 +159,9 @@
     <ClCompile Include="src\managers\TextureMapManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\util\GLThread.h" />
     <ClInclude Include="src\util\math_utils.h" />
+    <ClInclude Include="src\util\perlin.h" />
     <ClInclude Include="src\world\Chunk.h" />
     <ClInclude Include="src\world\Player.h" />
     <ClInclude Include="src\GameWindow.h" />
@@ -174,7 +177,7 @@
     <ClInclude Include="src\managers\TextureManager.h" />
     <ClInclude Include="src\UIText.h" />
     <ClInclude Include="src\world\World.h" />
-    <ClInclude Include="src\world\worldgen.h" />
+    <ClInclude Include="src\world\world_gen.h" />
     <ClInclude Include="src\managers\TextureMapManager.h" />
   </ItemGroup>
   <ItemGroup>

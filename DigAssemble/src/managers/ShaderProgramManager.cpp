@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../util/GLThread.h"
+
 std::unordered_map<std::string, unsigned int> ShaderProgramManager::programs;
 std::string ShaderProgramManager::activeProgram;
 
@@ -25,16 +27,19 @@ unsigned int ShaderProgramManager::compileShader(const std::string& shaderFile) 
 
     bool isVertexShader = shaderFile.find(".vert") != std::string::npos;
     
-    unsigned int shaderId = glCreateShader(isVertexShader ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
-    glShaderSource(shaderId, 1, &sharedSourceCStr, NULL);
-    glCompileShader(shaderId);
+    unsigned int shaderId = 0;
+    GLThread::call([&]() {
+        shaderId = glCreateShader(isVertexShader ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER);
+        glShaderSource(shaderId, 1, &sharedSourceCStr, NULL);
+        glCompileShader(shaderId);
+    });
 
     return shaderId;
 }
 
 void ShaderProgramManager::setActiveProgram(const std::string& programName) {
     if(programName != activeProgram) {
-        glUseProgram(programs.at(programName));
+        GLThread::call([&]() { glUseProgram(programs.at(programName)); });
         activeProgram = programName;
     }
 }
@@ -44,23 +49,23 @@ void ShaderProgramManager::setBool(const std::string& name, const bool& value) {
 }
 
 void ShaderProgramManager::setInt(const std::string& name, const int& value) {
-    glUniform1i(getUniformLocation(name), value);
+    GLThread::call([&]() {glUniform1i(getUniformLocation(name), value);  });
 }
 
 void ShaderProgramManager::setFloat(const std::string& name, const float& value) {
-    glUniform1f(getUniformLocation(name), value);
+    GLThread::call([&]() {glUniform1f(getUniformLocation(name), value); });
 }
 
 void ShaderProgramManager::setMat4(const std::string& name, const glm::mat4& value) {
-    glUniformMatrix4fv(getUniformLocation(name), 1, false, glm::value_ptr(value));
+    GLThread::call([&]() {glUniformMatrix4fv(getUniformLocation(name), 1, false, glm::value_ptr(value)); });
 }
 
 void ShaderProgramManager::setVec3(const std::string& name, const glm::vec3& value) {
-    glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(value));
+    GLThread::call([&]() {glUniform3fv(getUniformLocation(name), 1, glm::value_ptr(value)); });
 }
 
 void ShaderProgramManager::setVec4(const std::string& name, const glm::vec4& value) {
-    glUniform4fv(getUniformLocation(name), 1, glm::value_ptr(value));
+    GLThread::call([&]() {glUniform4fv(getUniformLocation(name), 1, glm::value_ptr(value)); });
 }
 
 void ShaderProgramManager::compileProgram(const std::string& programName) {
@@ -71,16 +76,18 @@ void ShaderProgramManager::compileProgram(const std::string& programName) {
     unsigned int vertShaderId = compileShader(programName + ".vert");
     unsigned int fragShaderId = compileShader(programName + ".frag");
 
-    unsigned int programId;
-    programId = glCreateProgram();
+    unsigned int programId = 0;
+    GLThread::call([&]() {
+        programId = glCreateProgram();
 
-    glAttachShader(programId, vertShaderId);
-    glAttachShader(programId, fragShaderId);
+        glAttachShader(programId, vertShaderId);
+        glAttachShader(programId, fragShaderId);
 
-    glLinkProgram(programId);
+        glLinkProgram(programId);
 
-    glDeleteShader(vertShaderId);
-    glDeleteShader(fragShaderId);
+        glDeleteShader(vertShaderId);
+        glDeleteShader(fragShaderId);
+    });
 
     programs.emplace(programName, programId);
 }

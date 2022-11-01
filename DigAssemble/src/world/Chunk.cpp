@@ -5,8 +5,13 @@
 #include <stdexcept>
 
 #include "../managers/ShaderProgramManager.h"
+#include "../util/GLThread.h"
 
 float Chunk::geometryConstructionBuffer[Chunk::geometryConstructionBufferSize] = {0};
+
+int Chunk::at(float a) {
+    return (int) (a / Chunk::SIZE) - (a < 0 ? 1 : 0);
+}
 
 Chunk::Chunk() : blocks{ {{nullptr}} }, vao(0), vbo(0), vertexCount(0) {
 }
@@ -59,15 +64,17 @@ void Chunk::setBlock(int x, int y, int z, Block* b) {
 }
 
 void Chunk::buildGeometry() {
-    if(!vao) {
-        glGenVertexArrays(1, &vao);
-    }
-    glBindVertexArray(vao);
+    GLThread::call([&]() {
+        if(!vao) {
+            glGenVertexArrays(1, &vao);
+        }
+        glBindVertexArray(vao);
 
-    if(vbo) {
-        glDeleteBuffers(1, &vbo);
-        vbo = 0;
-    }
+        if(vbo) {
+            glDeleteBuffers(1, &vbo);
+            vbo = 0;
+        }
+    });
 
     unsigned int geometryConstructionBufferSizeUsed = 0;
     vertexCount = 0;
@@ -111,22 +118,31 @@ void Chunk::buildGeometry() {
         }
     }
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    GLThread::call([&]() {
+        if(geometryConstructionBufferSizeUsed > 0) {
+            glGenBuffers(1, &vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-    glBufferData(GL_ARRAY_BUFFER, geometryConstructionBufferSizeUsed * sizeof(float), geometryConstructionBuffer, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, geometryConstructionBufferSizeUsed * sizeof(float), geometryConstructionBuffer, GL_STATIC_DRAW);
+        } else {
+            glDeleteVertexArrays(1, &vao);
+            vao = 0;
+        }
+    });
 }
 
 void Chunk::draw() {
     if(vao) {
         ShaderProgramManager::setActiveProgram("triangle");
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        GLThread::call([&]() {
+            glBindVertexArray(vao);
+            glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        });
     }
 }
 

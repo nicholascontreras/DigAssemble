@@ -11,6 +11,7 @@
 #include "managers/ShaderProgramManager.h"
 #include "managers/TextureManager.h"
 #include "GameWindow.h"
+#include "util/GLThread.h"
 
 
 const std::string UIText::TEXTURE_PREFIX = "char_";
@@ -43,19 +44,20 @@ void UIText::init() {
     FT_Done_Face(fontFace);
     FT_Done_FreeType(ft);
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    GLThread::call([&]() {
+        glGenVertexArrays(1, &VAO);
+        glBindVertexArray(VAO);
 
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glGenBuffers(1, &VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    });
     ShaderProgramManager::compileProgram("text");
 }
 
@@ -67,8 +69,10 @@ void UIText::drawText(const std::string& text, int x,  int y, int size, const gl
     ShaderProgramManager::setVec3("textColor", textColor);
     ShaderProgramManager::setMat4("projection", glm::ortho(0.0f, (float)GameWindow::getWidth(), (float)GameWindow::getHeight(), 0.0f, -1.0f, 1.0f));
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    GLThread::call([&]() {
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    });
 
     for(std::string::const_iterator curCharItr = text.begin(); curCharItr != text.end(); curCharItr++) {
         CharacterInfo curCharInfo = characters.at(*curCharItr);
@@ -90,8 +94,11 @@ void UIText::drawText(const std::string& text, int x,  int y, int size, const gl
         };
 
         TextureManager::bindTexture(TEXTURE_PREFIX + *curCharItr);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        GLThread::call([&]() {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        });
 
         // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
         x += (int) ((curCharInfo.advance >> 6) * scale); // bitshift by 6 to get value in pixels (2^6 = 64)
