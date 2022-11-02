@@ -142,14 +142,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\util\GLThread.cpp" />
+    <ClCompile Include="src\glad\gl.c" />
+    <ClCompile Include="src\util\AsyncWorker.cpp" />
     <ClCompile Include="src\world\Chunk.cpp" />
     <ClCompile Include="src\world\Player.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\util\FPSCounter.cpp" />
     <ClCompile Include="src\world\blocks\Block.cpp" />
-    <ClCompile Include="src\glad\glad.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\managers\ShaderProgramManager.cpp" />
     <ClCompile Include="src\stb_image\stb_image.cpp" />
@@ -157,9 +157,10 @@
     <ClCompile Include="src\UIText.cpp" />
     <ClCompile Include="src\world\World.cpp" />
     <ClCompile Include="src\managers\TextureMapManager.cpp" />
+    <ClCompile Include="src\world\WorldGen.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\util\GLThread.h" />
+    <ClInclude Include="src\util\AsyncWorker.h" />
     <ClInclude Include="src\util\math_utils.h" />
     <ClInclude Include="src\util\perlin.h" />
     <ClInclude Include="src\world\Chunk.h" />
@@ -177,7 +178,7 @@
     <ClInclude Include="src\managers\TextureManager.h" />
     <ClInclude Include="src\UIText.h" />
     <ClInclude Include="src\world\World.h" />
-    <ClInclude Include="src\world\world_gen.h" />
+    <ClInclude Include="src\world\WorldGen.h" />
     <ClInclude Include="src\managers\TextureMapManager.h" />
   </ItemGroup>
   <ItemGroup>

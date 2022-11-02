@@ -20,9 +20,13 @@ inline void Debug(const std::string& text, bool newLine = true) {
 }
 
 inline std::string to_string(const char text[]) {
-    for(int i = 0; i < 16; i++) {
+    // This function is being called from a variadic template function
+    // Perform a basic check that the sequenece of chars given is "probably" a string literal
+    for(int i = 0; i < 64; i++) {
         if(text[i] == 0) {
             return std::string(text);
+        } else if(text[i] < 32 || text[i] > 126) {
+            throw std::invalid_argument("Invalid character in text!");
         }
     }
     throw std::invalid_argument("No null terminator found!");

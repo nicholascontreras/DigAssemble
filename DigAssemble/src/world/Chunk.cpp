@@ -1,13 +1,17 @@
 #include "Chunk.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <stdexcept>
 
 #include "../managers/ShaderProgramManager.h"
-#include "../util/GLThread.h"
+#include "../util/AsyncWorker.h"
+#include "../util/debug.h"
 
 float Chunk::geometryConstructionBuffer[Chunk::geometryConstructionBufferSize] = {0};
+std::mutex Chunk::geometryConstructionBufferActiveMutex;
+std::condition_variable Chunk::geometryConstructionBufferActiveCondition;
+bool Chunk::geometryConstructionBufferActive = false;
 
 int Chunk::at(float a) {
     return (int) (a / Chunk::SIZE) - (a < 0 ? 1 : 0);
@@ -63,18 +67,32 @@ void Chunk::setBlock(int x, int y, int z, Block* b) {
     blocks[x][y][z] = b;
 }
 
-void Chunk::buildGeometry() {
-    GLThread::call([&]() {
-        if(!vao) {
-            glGenVertexArrays(1, &vao);
-        }
-        glBindVertexArray(vao);
+void Chunk::buildGeometry(bool async) {
+    if(async) {
+        AsyncWorker::queue<unsigned int>([&]() {
+            return constructLocalGeometry();
+        }, [&](unsigned int geometryConstructionBufferSizeUsed) {
+            sendGeometryToGraphics(geometryConstructionBufferSizeUsed);
+            Debug("Sent chunk to graphics, buffer size: ", geometryConstructionBufferSizeUsed);
+        });
+    } else {
+        sendGeometryToGraphics(constructLocalGeometry());
+    }
+}
 
-        if(vbo) {
-            glDeleteBuffers(1, &vbo);
-            vbo = 0;
-        }
-    });
+void Chunk::draw() {
+    if(vao) {
+        ShaderProgramManager::setActiveProgram("triangle");
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    }
+}
+
+unsigned int Chunk::constructLocalGeometry() {
+    std::unique_lock lock(geometryConstructionBufferActiveMutex);
+    geometryConstructionBufferActiveCondition.wait(lock, [] {return !geometryConstructionBufferActive; });
+    geometryConstructionBufferActive = true;
+    lock.unlock();
 
     unsigned int geometryConstructionBufferSizeUsed = 0;
     vertexCount = 0;
@@ -93,57 +111,64 @@ void Chunk::buildGeometry() {
                     }
                     if(!isInBounds(x - 1, y, z) || !blockExists(x - 1, y, z)) {
                         getBlock(x, y, z)->appendNegXFace(geometryConstructionBuffer, geometryConstructionBufferSizeUsed, matXYZ);
-                        vertexCount += Block::VERTICES_PER_FACE;;
+                        vertexCount += Block::VERTICES_PER_FACE;
                     }
 
                     if(!isInBounds(x, y + 1, z) || !blockExists(x, y + 1, z)) {
                         getBlock(x, y, z)->appendPosYFace(geometryConstructionBuffer, geometryConstructionBufferSizeUsed, matXYZ);
-                        vertexCount += Block::VERTICES_PER_FACE;;
+                        vertexCount += Block::VERTICES_PER_FACE;
                     }
                     if(!isInBounds(x, y - 1, z) || !blockExists(x, y - 1, z)) {
                         getBlock(x, y, z)->appendNegYFace(geometryConstructionBuffer, geometryConstructionBufferSizeUsed, matXYZ);
-                        vertexCount += Block::VERTICES_PER_FACE;;
+                        vertexCount += Block::VERTICES_PER_FACE;
                     }
 
                     if(!isInBounds(x, y, z + 1) || !blockExists(x, y, z + 1)) {
                         getBlock(x, y, z)->appendPosZFace(geometryConstructionBuffer, geometryConstructionBufferSizeUsed, matXYZ);
-                        vertexCount += Block::VERTICES_PER_FACE;;
+                        vertexCount += Block::VERTICES_PER_FACE;
                     }
                     if(!isInBounds(x, y, z - 1) || !blockExists(x, y, z - 1)) {
                         getBlock(x, y, z)->appendNegZFace(geometryConstructionBuffer, geometryConstructionBufferSizeUsed, matXYZ);
-                        vertexCount += Block::VERTICES_PER_FACE;;
+                        vertexCount += Block::VERTICES_PER_FACE;
                     }
                 }
             }
         }
     }
 
-    GLThread::call([&]() {
-        if(geometryConstructionBufferSizeUsed > 0) {
-            glGenBuffers(1, &vbo);
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-
-            glBufferData(GL_ARRAY_BUFFER, geometryConstructionBufferSizeUsed * sizeof(float), geometryConstructionBuffer, GL_STATIC_DRAW);
-        } else {
-            glDeleteVertexArrays(1, &vao);
-            vao = 0;
-        }
-    });
+    return geometryConstructionBufferSizeUsed;
 }
 
-void Chunk::draw() {
-    if(vao) {
-        ShaderProgramManager::setActiveProgram("triangle");
-        GLThread::call([&]() {
-            glBindVertexArray(vao);
-            glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-        });
+void Chunk::sendGeometryToGraphics(unsigned int geometryConstructionBufferSizeUsed) {
+    AsyncWorker::ensureGLThread();
+
+    if(!vao) {
+        glGenVertexArrays(1, &vao);
     }
+    glBindVertexArray(vao);
+
+    if(vbo) {
+        glDeleteBuffers(1, &vbo);
+        vbo = 0;
+    }
+
+    if(geometryConstructionBufferSizeUsed > 0) {
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+        glBufferData(GL_ARRAY_BUFFER, geometryConstructionBufferSizeUsed * sizeof(float), geometryConstructionBuffer, GL_STATIC_DRAW);
+    } else {
+        glDeleteVertexArrays(1, &vao);
+        vao = 0;
+    }
+
+    geometryConstructionBufferActive = false;
+    geometryConstructionBufferActiveCondition.notify_one();
 }
 
 void swap(Chunk& first, Chunk& second) {

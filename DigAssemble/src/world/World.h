@@ -27,7 +27,6 @@ public:
     void setBlock(int x, int y, int z, Block* b);
 
     void draw();
-    void buildAllGeometry();
 private:
     std::map<int, std::map<int, std::map<int, Chunk*>>> chunks;
 };

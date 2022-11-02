@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <glm/glm.hpp>
 
 #include "blocks/Block.h"
@@ -24,15 +26,22 @@ public:
     Block* getBlock(int x, int y, int z);
     void setBlock(int x, int y, int z, Block* b);
 
-    void buildGeometry();
+    void buildGeometry(bool async);
     void draw();
 private:
     static const unsigned int geometryConstructionBufferSize = Block::NUM_VERTICES * Block::ELEMENTS_PER_VERTEX * SIZE * SIZE * SIZE;
     static float geometryConstructionBuffer[geometryConstructionBufferSize];
+    
+    static std::mutex geometryConstructionBufferActiveMutex;
+    static std::condition_variable geometryConstructionBufferActiveCondition;
+    static bool geometryConstructionBufferActive;
 
     Block* blocks[SIZE][SIZE][SIZE];
 
     unsigned int vao, vbo;
     unsigned int vertexCount;
+
+    unsigned int constructLocalGeometry();
+    void sendGeometryToGraphics(unsigned int geometryConstructionBufferSizeUsed);
 };
 

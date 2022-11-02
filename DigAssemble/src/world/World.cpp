@@ -77,16 +77,6 @@ void World::draw() {
     }
 }
 
-void World::buildAllGeometry() {
-    for(const auto& x : chunks) {
-        for(const auto& y : chunks.at(x.first)) {
-            for(const auto& z : chunks.at(x.first).at(y.first)) {
-                z.second->buildGeometry();
-            }
-        }
-    }
-}
-
 void swap(World& first, World& second) {
     using std::swap;
     swap(first.chunks, second.chunks);

@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <glfw/glfw3.h>
 
 #include "Camera.h"

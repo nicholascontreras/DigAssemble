@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Camera::Camera() :
-    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN) {
+    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN), renderDistance(100) {
 }
 
 void Camera::setAspectRatio(float newAspectRatio) {
@@ -36,5 +36,5 @@ glm::mat4 Camera::getViewMat() const {
 }
 
 glm::mat4 Camera::getProjectionMat() const {
-    return glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
+    return glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, renderDistance);
 }
