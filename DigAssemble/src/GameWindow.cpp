@@ -81,7 +81,7 @@ void GameWindow::run() {
         glfwPollEvents();
         AsyncWorker::runCallback();
 
-        WorldGen::expandWorldAroundPlayer(world, player, (int) ceilf(camera.getRenderDistance() / Chunk::SIZE) + 1);
+        WorldGen::expandWorldAroundPlayer(world, player, camera.getRenderDistance());
 
         if(width > 0) {
             glClearColor(1, 1, 1, 1);

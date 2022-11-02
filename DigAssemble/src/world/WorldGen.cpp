@@ -85,6 +85,8 @@ void WorldGen::generateChunk(World& w, int cx, int cy, int cz, bool async) {
         }
     }
 
+    Debug("Generated chunk in local memory, x: ", cx, " y: ", cy, " z: ", cz);
+
     c->buildGeometry(async);
 }
 

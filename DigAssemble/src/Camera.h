@@ -12,7 +12,7 @@ public:
     void rotateUD(float amount);
 
     inline float getAngleLR() { return angleLR; };
-    inline float getRenderDistance() { return renderDistance; };
+    inline int getRenderDistance() { return renderDistance; };
 
     void setCameraPos(float newX, float newY, float newZ);
 
@@ -22,6 +22,6 @@ private:
     float x, y, z;
     float angleLR, angleUD;
     float aspectRatio;
-    float renderDistance;
+    int renderDistance;
 };
 

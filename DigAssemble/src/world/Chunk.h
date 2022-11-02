@@ -29,7 +29,7 @@ public:
     void buildGeometry(bool async);
     void draw();
 private:
-    static const unsigned int geometryConstructionBufferSize = Block::NUM_VERTICES * Block::ELEMENTS_PER_VERTEX * SIZE * SIZE * SIZE;
+    static const unsigned int geometryConstructionBufferSize = (Block::NUM_VERTICES * Block::ELEMENTS_PER_VERTEX * SIZE * SIZE * SIZE) / 2;
     static float geometryConstructionBuffer[geometryConstructionBufferSize];
     
     static std::mutex geometryConstructionBufferActiveMutex;
