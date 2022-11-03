@@ -2,12 +2,11 @@
 
 #include "../util/perlin.h"
 #include "../util/debug.h"
-#include "../util/AsyncWorker.h"
+#include "../util/async/Async.h"
+#include "../util/async/AsyncWorker.h"
 
 int WorldGen::GENERATION_DISTANCE = -1;
-bool WorldGen::stop = false;
 std::thread WorldGen::worldGenThread;
-ResourceLock WorldGen::lock;
 
 World WorldGen::generateNewWorld(int seed) {
     World world(seed);
@@ -26,14 +25,18 @@ World WorldGen::generateNewWorld(int seed) {
 
 void WorldGen::start(World& w, const Player& player) {
     worldGenThread = std::thread([&]() {
-        while(!stop) {
-            lock.lock();
+        while(Async::shouldRun()) {
+            Async::lock(w);
             if(!expandWorld(w, player)) {
-                lock.unlock();
+                Async::unlock(w);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
         }
     });
+}
+
+void WorldGen::threadJoin() {
+    worldGenThread.join();
 }
 
 bool WorldGen::expandWorld(World& w, const Player& player) {
@@ -64,7 +67,7 @@ bool WorldGen::expandWorld(World& w, const Player& player) {
                     Debug("Sending local chunk to graphics, x: ", curX, " y: ", curY, " z: ", curZ);
                     w.getChunk(curX, curY, curZ)->sendGeometryToGraphics(geometryConstructionBufferSizeUsed);
                         
-                    lock.unlock();
+                    Async::unlock(w);
                 });
                 return true;
             }
@@ -108,7 +111,10 @@ void WorldGen::generateChunk(World& w, int cx, int cy, int cz) {
             int maxY = calcY((cx * Chunk::SIZE) + x, (cz * Chunk::SIZE) + z, w.seed);
             for(int y = 0; y < Chunk::SIZE; y++) {
                 if(y + (cy * Chunk::SIZE) <= maxY) {
-                    c->setBlock(x, y, z, new Block("grass"));
+                    Block* b = generateBlock(x + (cx * Chunk::SIZE), y + (cy * Chunk::SIZE), z + (cz * Chunk::SIZE), w.seed);
+                    if(b != nullptr) {
+                        c->setBlock(x, y, z, b);
+                    }
                 }
             }
         }
@@ -116,11 +122,36 @@ void WorldGen::generateChunk(World& w, int cx, int cy, int cz) {
     w.setChunk(cx, cy, cz, c);
 }
 
+Block* WorldGen::generateBlock(int x, int y, int z, int seed) {
+    const int stoneDepth = calcStoneDepth(x, z, seed);
+    const int topLevel = calcY(x, z, seed);
+
+    if(y < topLevel - stoneDepth) {
+        return new Block("stone");
+    } else if(y <= topLevel) {
+        return new Block("grass");
+    } else {
+        throw std::invalid_argument("Y value greater than calculated surface level!");
+    }
+}
+
 int WorldGen::calcY(int x, int z, int seed) {
     float base = perlin::get(x, z, 16, seed);
     return (int)(base * 8) + 9;
 }
 
-void WorldGen::shutdown() {
-    stop = true;
+int WorldGen::calcStoneDepth(int x, int z, int seed) {
+    return (int) ((perlin::get(x, z, 1, seed) + 1) * 5) + 5;
 }
+
+WorldGen::Biome WorldGen::biomeAt(int x, int z, int seed) {
+    float p = (perlin::get(x, z, 100, seed) + 1) / 2;
+    if(p < 0.1f) {
+        return Biome::MOUNTAINS;
+    } else if(p < 0.2f) {
+        return Biome::DESERT;
+    } else {
+        return Biome::GRASSLANDS;
+    }
+}
+

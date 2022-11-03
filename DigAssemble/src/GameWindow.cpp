@@ -13,7 +13,7 @@
 #include "util/FPSCounter.h"
 #include "world/WorldGen.h"
 #include "util/math_utils.h"
-#include "util/AsyncWorker.h"
+#include "util/async/AsyncWorker.h"
 
 Camera GameWindow::camera;
 Player GameWindow::player;
@@ -108,8 +108,9 @@ void GameWindow::run() {
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    WorldGen::shutdown();
-    AsyncWorker::shutdown();
+    Async::killAll();
+    WorldGen::threadJoin();
+    AsyncWorker::threadJoin();
 }
 
 int GameWindow::getWidth() {

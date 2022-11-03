@@ -143,8 +143,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\glad\gl.c" />
-    <ClCompile Include="src\util\AsyncWorker.cpp" />
-    <ClCompile Include="src\util\ResourceLock.cpp" />
+    <ClCompile Include="src\util\async\AsyncWorker.cpp" />
+    <ClCompile Include="src\util\async\Async.cpp" />
     <ClCompile Include="src\world\Chunk.cpp" />
     <ClCompile Include="src\world\Player.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
@@ -161,10 +161,10 @@
     <ClCompile Include="src\world\WorldGen.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\util\AsyncWorker.h" />
+    <ClInclude Include="src\util\async\AsyncWorker.h" />
     <ClInclude Include="src\util\math_utils.h" />
     <ClInclude Include="src\util\perlin.h" />
-    <ClInclude Include="src\util\ResourceLock.h" />
+    <ClInclude Include="src\util\async\Async.h" />
     <ClInclude Include="src\world\Chunk.h" />
     <ClInclude Include="src\world\Player.h" />
     <ClInclude Include="src\GameWindow.h" />

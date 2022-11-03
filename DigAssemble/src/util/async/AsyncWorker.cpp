@@ -3,30 +3,25 @@
 #include <stdexcept>
 #include <glfw/glfw3.h>
 
-bool AsyncWorker::stop = false;
 std::thread AsyncWorker::workThread(run);
 
-std::mutex AsyncWorker::workQueueMutex;
 std::queue<AsyncWorker::QueuedWork> AsyncWorker::workQueue;
-
-std::mutex AsyncWorker::callbackQueueMutex;
 std::queue<AsyncWorker::QueuedCallback> AsyncWorker::callbackQueue;
 
 void AsyncWorker::runCallback() {
-    callbackQueueMutex.lock();
+    Async::lock(callbackQueue);
     if(callbackQueue.empty()) {
-        callbackQueueMutex.unlock();
+        Async::unlock(callbackQueue);
     } else {
         QueuedCallback qc = callbackQueue.front();
         callbackQueue.pop();
-        callbackQueueMutex.unlock();
+        Async::unlock(callbackQueue);
 
         qc.callback(qc.result);
     }
 }
 
-void AsyncWorker::shutdown() {
-    stop = true;
+void AsyncWorker::threadJoin() {
     workThread.join();
 }
 
@@ -41,22 +36,23 @@ void AsyncWorker::ensureGLThread() {
 }
 
 void AsyncWorker::run() {
-    while(!stop) {
-        workQueueMutex.lock();
+    while(Async::shouldRun()) {
+        Async::lock(workQueue);
         if(workQueue.empty()) {
-            workQueueMutex.unlock();
+            Async::unlock(workQueue);
         } else {
             QueuedWork qw = workQueue.front();
             workQueue.pop();
-            workQueueMutex.unlock();
+            Async::unlock(workQueue);
 
             void* result = qw.work();
 
-            callbackQueueMutex.lock();
-            callbackQueue.push({ qw.callback, result });
-            callbackQueueMutex.unlock();
+            synchronized(callbackQueue) {
+                callbackQueue.push({ qw.callback, result });
+            }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }

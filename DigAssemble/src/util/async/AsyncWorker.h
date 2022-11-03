@@ -5,6 +5,8 @@
 #include <thread>
 #include <mutex>
 
+#include "Async.h"
+
 
 class AsyncWorker {
 public:
@@ -13,13 +15,13 @@ public:
         std::function<void* ()> wrappedFunc = [func = std::move(func)]() { return (void*)(new T(func())); };
         std::function<void(void*)> wrappedCallback = [callback = std::move(callback)](void* result) { callback(*(T*)result); delete ((T*)result); };
 
-        workQueueMutex.lock();
+        Async::lock(workQueue);
         workQueue.push({wrappedFunc, wrappedCallback});
-        workQueueMutex.unlock();
+        Async::unlock(workQueue);
     }
 
     static void runCallback();
-    static void shutdown();
+    static void threadJoin();
 
     static bool isGLThread();
     static void ensureGLThread();
@@ -34,13 +36,9 @@ private:
         void* result;
     };
 
-    static bool stop;
     static std::thread workThread;
 
-    static std::mutex workQueueMutex;
     static std::queue<QueuedWork> workQueue;
-
-    static std::mutex callbackQueueMutex;
     static std::queue<QueuedCallback> callbackQueue;
 
     static void run();

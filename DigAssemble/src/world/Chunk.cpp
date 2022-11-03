@@ -5,13 +5,10 @@
 #include <stdexcept>
 
 #include "../managers/ShaderProgramManager.h"
-#include "../util/AsyncWorker.h"
+#include "../util/async/AsyncWorker.h"
 #include "../util/debug.h"
 
 float Chunk::geometryConstructionBuffer[Chunk::geometryConstructionBufferSize] = {0};
-std::mutex Chunk::geometryConstructionBufferActiveMutex;
-std::condition_variable Chunk::geometryConstructionBufferActiveCondition;
-bool Chunk::geometryConstructionBufferActive = false;
 
 int Chunk::at(float a) {
     return (int) (a / Chunk::SIZE) - (a < 0 ? 1 : 0);
@@ -79,10 +76,7 @@ void Chunk::draw() {
 }
 
 unsigned int Chunk::constructLocalGeometry() {
-    std::unique_lock lock(geometryConstructionBufferActiveMutex);
-    geometryConstructionBufferActiveCondition.wait(lock, [] {return !geometryConstructionBufferActive; });
-    geometryConstructionBufferActive = true;
-    lock.unlock();
+    Async::lock(geometryConstructionBuffer);
 
     unsigned int geometryConstructionBufferSizeUsed = 0;
     vertexCount = 0;
@@ -157,8 +151,7 @@ void Chunk::sendGeometryToGraphics(unsigned int geometryConstructionBufferSizeUs
         vao = 0;
     }
 
-    geometryConstructionBufferActive = false;
-    geometryConstructionBufferActiveCondition.notify_one();
+    Async::unlock(geometryConstructionBuffer);
 }
 
 void swap(Chunk& first, Chunk& second) {

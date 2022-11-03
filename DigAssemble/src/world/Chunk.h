@@ -1,10 +1,9 @@
 #pragma once
 
-#include <mutex>
-
 #include <glm/glm.hpp>
 
 #include "blocks/Block.h"
+#include "../util/async/Async.h"
 
 class Chunk {
 public:
@@ -33,10 +32,6 @@ public:
 private:
     static const unsigned int geometryConstructionBufferSize = (Block::NUM_VERTICES * Block::ELEMENTS_PER_VERTEX * SIZE * SIZE * SIZE) / 2;
     static float geometryConstructionBuffer[geometryConstructionBufferSize];
-    
-    static std::mutex geometryConstructionBufferActiveMutex;
-    static std::condition_variable geometryConstructionBufferActiveCondition;
-    static bool geometryConstructionBufferActive;
 
     Block* blocks[SIZE][SIZE][SIZE];
 

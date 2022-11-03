@@ -54,16 +54,16 @@
     <ClCompile Include="src\managers\TextureMapManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\AsyncWorker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\world\WorldGen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\glad\gl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\ResourceLock.cpp">
+    <ClCompile Include="src\util\async\AsyncWorker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\async\Async.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,13 +122,13 @@
     <ClInclude Include="src\util\perlin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\util\AsyncWorker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\world\WorldGen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\util\ResourceLock.h">
+    <ClInclude Include="src\util\async\AsyncWorker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\async\Async.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
