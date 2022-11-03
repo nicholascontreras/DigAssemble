@@ -10,9 +10,9 @@ public:
     void strafeLeftRight(float amount);
     void flyUpDown(float amount);
 
-    inline float getX() { return x; };
-    inline float getY() { return y; };
-    inline float getZ() { return z; };
+    inline float getX() const { return x; };
+    inline float getY() const { return y; };
+    inline float getZ() const { return z; };
 
     void setDirectionFacing(float newAngleLR);
 

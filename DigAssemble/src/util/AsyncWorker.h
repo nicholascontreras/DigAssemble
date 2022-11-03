@@ -23,7 +23,6 @@ public:
 
     static bool isGLThread();
     static void ensureGLThread();
-
 private:
     struct QueuedWork {
         std::function<void*()> work;

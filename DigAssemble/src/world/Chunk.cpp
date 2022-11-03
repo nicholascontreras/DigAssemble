@@ -64,20 +64,10 @@ void Chunk::setBlock(int x, int y, int z, Block* b) {
     if(!isInBounds(x, y, z)) {
         throw std::invalid_argument("Out of bounds!");
     }
-    blocks[x][y][z] = b;
-}
-
-void Chunk::buildGeometry(bool async) {
-    if(async) {
-        AsyncWorker::queue<unsigned int>([&]() {
-            return constructLocalGeometry();
-        }, [&](unsigned int geometryConstructionBufferSizeUsed) {
-            sendGeometryToGraphics(geometryConstructionBufferSizeUsed);
-            Debug("Sent chunk to graphics, buffer size: ", geometryConstructionBufferSizeUsed);
-        });
-    } else {
-        sendGeometryToGraphics(constructLocalGeometry());
+    if(blocks[x][y][z] != nullptr) {
+        throw std::invalid_argument("Block already exists!");
     }
+    blocks[x][y][z] = b;
 }
 
 void Chunk::draw() {

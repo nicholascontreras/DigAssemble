@@ -5,7 +5,7 @@
 #include "world/Chunk.h"
 
 Camera::Camera() :
-    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN), renderDistance(4) {
+    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN), renderDistance(6) {
 }
 
 void Camera::setAspectRatio(float newAspectRatio) {

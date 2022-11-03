@@ -30,17 +30,24 @@ bool World::chunkExists(int x, int y, int z) {
 }
 
 Chunk* World::getChunk(int x, int y, int z) {
+    if(!chunkExists(x, y, z)) {
+        throw std::invalid_argument("No chunk!");
+    }
+    return chunks.at(x).at(y).at(z);
+}
+
+void World::setChunk(int x, int y, int z, Chunk* c) {
+    if(chunkExists(x, y, z)) {
+        throw std::invalid_argument("Chunk already exists!");
+    }
+
     if(!chunks.count(x)) {
         chunks.emplace(x, std::map<int, std::map<int, Chunk*>>());
     }
     if(!chunks.at(x).count(y)) {
         chunks.at(x).emplace(y, std::map<int, Chunk*>());
     }
-    if(!chunks.at(x).at(y).count(z)) {
-        chunks.at(x).at(y).emplace(z, new Chunk());
-    }
-
-    return chunks.at(x).at(y).at(z);
+    chunks.at(x).at(y).emplace(z, c);
 }
 
 bool World::blockExists(int x, int y, int z) {

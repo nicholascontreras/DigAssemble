@@ -63,6 +63,9 @@
     <ClCompile Include="src\glad\gl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\util\ResourceLock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lib\glad\include\glad\glad.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\world\WorldGen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\ResourceLock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

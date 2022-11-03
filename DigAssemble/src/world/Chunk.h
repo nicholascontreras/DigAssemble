@@ -26,7 +26,9 @@ public:
     Block* getBlock(int x, int y, int z);
     void setBlock(int x, int y, int z, Block* b);
 
-    void buildGeometry(bool async);
+    unsigned int constructLocalGeometry();
+    void sendGeometryToGraphics(unsigned int geometryConstructionBufferSizeUsed);
+
     void draw();
 private:
     static const unsigned int geometryConstructionBufferSize = (Block::NUM_VERTICES * Block::ELEMENTS_PER_VERTEX * SIZE * SIZE * SIZE) / 2;
@@ -40,8 +42,5 @@ private:
 
     unsigned int vao, vbo;
     unsigned int vertexCount;
-
-    unsigned int constructLocalGeometry();
-    void sendGeometryToGraphics(unsigned int geometryConstructionBufferSizeUsed);
 };
 

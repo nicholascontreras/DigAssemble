@@ -21,6 +21,7 @@ public:
 
     bool chunkExists(int x, int y, int z);
     Chunk* getChunk(int x, int y, int z);
+    void setChunk(int x, int y, int z, Chunk* c);
 
     bool blockExists(int x, int y, int z);
     Block* getBlock(int x, int y, int z);

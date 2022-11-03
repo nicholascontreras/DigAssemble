@@ -73,15 +73,14 @@ void GameWindow::run() {
     UIText::init();
 
     World world = WorldGen::generateNewWorld(0);
-
-    int count = 0;
+    WorldGen::start(world, player);
 
     while(!glfwWindowShouldClose(window)) {
         
         glfwPollEvents();
-        AsyncWorker::runCallback();
 
-        WorldGen::expandWorldAroundPlayer(world, player, camera.getRenderDistance());
+        WorldGen::GENERATION_DISTANCE = camera.getRenderDistance();
+        AsyncWorker::runCallback();
 
         if(width > 0) {
             glClearColor(1, 1, 1, 1);
@@ -104,13 +103,12 @@ void GameWindow::run() {
 
         FPSCounter::recordFrame();
         FPSCounter::delayForFPS(60);
-
-        count++;
     }
 
     glfwDestroyWindow(window);
     glfwTerminate();
 
+    WorldGen::shutdown();
     AsyncWorker::shutdown();
 }
 
