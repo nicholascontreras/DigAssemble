@@ -10,6 +10,8 @@ public:
     void strafeLeftRight(float amount);
     void flyUpDown(float amount);
 
+    inline void setY(float newY) { y = newY; };
+
     inline float getX() const { return x; };
     inline float getY() const { return y; };
     inline float getZ() const { return z; };

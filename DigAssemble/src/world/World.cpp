@@ -8,7 +8,7 @@
 #include "../managers/TextureMapManager.h"
 #include "../util/math_utils.h"
 
-World::World(int seed) : seed(seed) {
+World::World(int seed, int spawnY) : seed(seed), spawnY(spawnY) {
 }
 
 World::~World() {
@@ -21,7 +21,7 @@ World::~World() {
     }
 }
 
-World::World(World&& other) noexcept : World(this->seed) {
+World::World(World&& other) noexcept : World(other.seed, other.spawnY) {
     swap(*this, other);
 }
 
@@ -77,7 +77,10 @@ void World::draw() {
                     glm::mat4 matXYZ = glm::translate(matXY, glm::vec3(0, 0, z.first * Chunk::SIZE));
                     ShaderProgramManager::setActiveProgram("triangle");
                     ShaderProgramManager::setMat4("model", matXYZ);
+
+                    Async::lock(*this);
                     getChunk(x.first, y.first, z.first)->draw();
+                    Async::unlock(*this);
                 }
             }
         }

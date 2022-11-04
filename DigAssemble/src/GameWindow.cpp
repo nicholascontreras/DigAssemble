@@ -11,7 +11,7 @@
 #include "world/World.h"
 #include "UIText.h"
 #include "util/FPSCounter.h"
-#include "world/WorldGen.h"
+#include "world/worldgen/WorldGen.h"
 #include "util/math_utils.h"
 #include "util/async/AsyncWorker.h"
 
@@ -72,11 +72,13 @@ void GameWindow::run() {
 
     UIText::init();
 
+    AsyncWorker::start();
+
     World world = WorldGen::generateNewWorld(0);
+    player.setY((float)world.spawnY);
     WorldGen::start(world, player);
 
     while(!glfwWindowShouldClose(window)) {
-        
         glfwPollEvents();
 
         WorldGen::GENERATION_DISTANCE = camera.getRenderDistance();
@@ -86,7 +88,7 @@ void GameWindow::run() {
             glClearColor(1, 1, 1, 1);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            camera.setCameraPos(player.getX(), player.getY(), player.getZ());
+            camera.setCameraPos(player.getX(), player.getY() + 1.5f, player.getZ());
             player.setDirectionFacing(camera.getAngleLR());
 
             ShaderProgramManager::setActiveProgram("triangle");
@@ -96,6 +98,10 @@ void GameWindow::run() {
             world.draw();
 
             UIText::drawText("FPS: " + std::to_string(FPSCounter::getFPS()), 10, 20, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("X: " + std::to_string(player.getX()), 10, 40, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("Y: " + std::to_string(player.getY()), 10, 60, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("Z: " + std::to_string(player.getZ()), 10, 80, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("A: " + std::to_string(camera.getAngleLR()), 10, 100, 20, glm::vec3(0.0f, 0.0f, 0.0f));
 
             glfwSwapBuffers(window);
             handleContinuousKeys(window);
@@ -109,8 +115,6 @@ void GameWindow::run() {
     glfwTerminate();
 
     Async::killAll();
-    WorldGen::threadJoin();
-    AsyncWorker::threadJoin();
 }
 
 int GameWindow::getWidth() {

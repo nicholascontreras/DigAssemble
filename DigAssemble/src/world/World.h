@@ -8,8 +8,9 @@
 class World {
 public:
     const int seed;
+    const int spawnY;
 
-    World(int seed);
+    World(int seed, int spawnY);
     ~World();
 
     World(const World& other) = delete;

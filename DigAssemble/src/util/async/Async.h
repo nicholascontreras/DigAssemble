@@ -1,6 +1,8 @@
 #pragma once
 #include <map>
+#include <set>
 #include <mutex>
+#include <functional>
 
 class Async {
 public:
@@ -10,8 +12,11 @@ public:
     template <class T>
     static inline void unlock(const T& target) { unlock((void*)(&target)); }
 
+    static void lock(const char name[]);
+    static void unlock(const char name[]);
+
+    static void startThread(std::function<void()> func);
     static void killAll();
-    static bool shouldRun();
 private:
 
     struct CrossThreadMutex {
@@ -23,6 +28,10 @@ private:
     static std::mutex mapMutex;
     static std::map<void*, CrossThreadMutex> locks;
     static bool kill;
+
+    static std::vector<std::thread> threads;
+
+    static std::vector<std::string> namedLockObjects;
 
     static void lock(void* target);
     static void unlock(void* target);

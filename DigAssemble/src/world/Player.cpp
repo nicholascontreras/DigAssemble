@@ -4,7 +4,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-Player::Player() : x(0), y(16), z(0), angleLR(NAN) {
+#include "Chunk.h"
+
+Player::Player() : x(0.5f), y(NAN), z(0.5f), angleLR(NAN) {
 }
 
 void Player::moveForwardBackwards(float amount) {

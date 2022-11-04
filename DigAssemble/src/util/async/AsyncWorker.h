@@ -10,6 +10,9 @@
 
 class AsyncWorker {
 public:
+
+    static void start();
+
     template <class T>
     static inline void queue(std::function<T()> func, std::function<void(T)> callback) {
         std::function<void* ()> wrappedFunc = [func = std::move(func)]() { return (void*)(new T(func())); };
@@ -21,7 +24,6 @@ public:
     }
 
     static void runCallback();
-    static void threadJoin();
 
     static bool isGLThread();
     static void ensureGLThread();
@@ -36,10 +38,6 @@ private:
         void* result;
     };
 
-    static std::thread workThread;
-
     static std::queue<QueuedWork> workQueue;
     static std::queue<QueuedCallback> callbackQueue;
-
-    static void run();
 };
