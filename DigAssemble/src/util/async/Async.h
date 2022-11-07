@@ -16,7 +16,7 @@ public:
     static void unlock(const char name[]);
 
     static void startThread(std::function<void()> func);
-    static void killAll();
+    static void stopAllThreads();
 private:
 
     struct CrossThreadMutex {

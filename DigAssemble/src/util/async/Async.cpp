@@ -35,7 +35,7 @@ void Async::startThread(std::function<void()> func) {
     }));
 }
 
-void Async::killAll() {
+void Async::stopAllThreads() {
     mapMutex.lock();
     kill = true;
     for(std::pair<void* const, CrossThreadMutex>& cur : locks) {

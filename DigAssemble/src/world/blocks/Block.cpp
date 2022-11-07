@@ -63,6 +63,10 @@ unsigned int Block::getNumFaceVertices() {
 Block::Block(const std::string& textureName) : textureName(textureName) {
 }
 
+std::string Block::getTextureName() {
+    return textureName;
+}
+
 void Block::appendPosXFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation) {
     appendFace(geometry, geometrySizeUsed, translation, 3 * VERTICES_PER_FACE * ELEMENTS_PER_VERTEX);
 }

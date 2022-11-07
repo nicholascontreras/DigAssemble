@@ -1,6 +1,7 @@
 #include "World.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -12,31 +13,33 @@ World::World(int seed, int spawnY) : seed(seed), spawnY(spawnY) {
 }
 
 World::~World() {
-    for(const auto& x : chunks) {
-        for(const auto& y : chunks.at(x.first)) {
-            for(const auto& z : chunks.at(x.first).at(y.first)) {
-                delete z.second;
-            }
-        }
-    }
+    std::unordered_map<Coord, Chunk*> lc = loadedChunks();
+    std::for_each(lc.begin(), lc.end(), [](std::pair<Coord, Chunk*> c) { delete c.second; });
 }
 
 World::World(World&& other) noexcept : World(other.seed, other.spawnY) {
     swap(*this, other);
 }
 
-bool World::chunkExists(int x, int y, int z) {
+bool World::chunkExists(int x, int y, int z) const {
     return chunks.count(x) && chunks.at(x).count(y) && chunks.at(x).at(y).count(z);
 }
 
-Chunk* World::getChunk(int x, int y, int z) {
+bool World::chunkLoaded(int x, int y, int z) const {
+    if(!chunkExists(x, y, z)) {
+        throw std::invalid_argument("No chunk!");
+    }
+    return chunks.at(x).at(y).at(z) != nullptr;
+}
+
+Chunk* World::getChunk(int x, int y, int z) const {
     if(!chunkExists(x, y, z)) {
         throw std::invalid_argument("No chunk!");
     }
     return chunks.at(x).at(y).at(z);
 }
 
-void World::setChunk(int x, int y, int z, Chunk* c) {
+void World::initChunk(int x, int y, int z) {
     if(chunkExists(x, y, z)) {
         throw std::invalid_argument("Chunk already exists!");
     }
@@ -47,44 +50,68 @@ void World::setChunk(int x, int y, int z, Chunk* c) {
     if(!chunks.at(x).count(y)) {
         chunks.at(x).emplace(y, std::map<int, Chunk*>());
     }
+    chunks.at(x).at(y).emplace(z, nullptr);
+}
+
+void World::loadChunk(int x, int y, int z, Chunk* c) {
+    if(chunkLoaded(x, y, z)) {
+        throw std::invalid_argument("Chunk already loaded!");
+    }
+
+    chunks.at(x).at(y).erase(z);
     chunks.at(x).at(y).emplace(z, c);
 }
 
-bool World::blockExists(int x, int y, int z) {
-    if(chunkExists(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))) {
-        return getChunk(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))->blockExists(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE));
+Chunk* World::unloadChunk(int x, int y, int z) {
+    if(!chunkLoaded(x, y, z)) {
+        throw std::invalid_argument("Chunk not loaded!");
     }
-    return false;
+
+    Chunk* c = chunks.at(x).at(y).at(z);
+    chunks.at(x).at(y).erase(z);
+    chunks.at(x).at(y).emplace(z, nullptr);
+    return c;
 }
 
-Block* World::getBlock(int x, int y, int z) {
-    return getChunk(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))->getBlock(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE));
+std::unordered_map<Coord, Chunk*> World::loadedChunks() const {
+    std::unordered_map<Coord, Chunk*> lc;
+    for(const auto& x : chunks) {
+        for(const auto& y : chunks.at(x.first)) {
+            for(const auto& z : chunks.at(x.first).at(y.first)) {
+                if(z.second != nullptr) {
+                    lc.emplace(Coord(x.first, y.first, z.first), z.second);
+                }
+            }
+        }
+    }
+    return lc;
 }
 
-void World::setBlock(int x, int y, int z, Block* b) {
-    getChunk(floorDiv(x, Chunk::SIZE), floorDiv(y, Chunk::SIZE), floorDiv(z, Chunk::SIZE))->setBlock(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE), b);
+std::unordered_map<Coord, Chunk*> World::allChunks() const {
+    std::unordered_map<Coord, Chunk*> ac;
+    for(const auto& x : chunks) {
+        for(const auto& y : chunks.at(x.first)) {
+            for(const auto& z : chunks.at(x.first).at(y.first)) {
+                ac.emplace(Coord(x.first, y.first, z.first), z.second);
+            }
+        }
+    }
+    return ac;
 }
 
 void World::draw() {
     TextureMapManager::bindTextureMap("blocks");
 
-    for(const auto& x : chunks) {
-        glm::mat4 matX = glm::translate(glm::mat4(1.0f), glm::vec3(x.first * Chunk::SIZE, 0, 0));
-        for(const auto& y : chunks.at(x.first)) {
-            glm::mat4 matXY = glm::translate(matX, glm::vec3(0, y.first * Chunk::SIZE, 0));
-            for(const auto& z : chunks.at(x.first).at(y.first)) {
-                if(chunkExists(x.first, y.first, z.first)) {
-                    glm::mat4 matXYZ = glm::translate(matXY, glm::vec3(0, 0, z.first * Chunk::SIZE));
-                    ShaderProgramManager::setActiveProgram("triangle");
-                    ShaderProgramManager::setMat4("model", matXYZ);
+    std::unordered_map<Coord, Chunk*> lc = loadedChunks();
+    std::for_each(lc.begin(), lc.end(), [&](std::pair<Coord, Chunk*> c) {
+        glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), glm::vec3(c.first.x * Chunk::SIZE, c.first.y * Chunk::SIZE, c.first.z * Chunk::SIZE));
+        ShaderProgramManager::setActiveProgram("triangle");
+        ShaderProgramManager::setMat4("model", modelMat);
 
-                    Async::lock(*this);
-                    getChunk(x.first, y.first, z.first)->draw();
-                    Async::unlock(*this);
-                }
-            }
-        }
-    }
+        Async::lock(*this);
+        c.second->draw();
+        Async::unlock(*this);
+    });
 }
 
 void swap(World& first, World& second) {

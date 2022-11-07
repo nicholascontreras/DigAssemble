@@ -11,6 +11,10 @@ public:
 
     static int at(float a);
 
+    struct ChunkPos {
+        int x, y, z;
+    };
+
     Chunk();
     ~Chunk();
     Chunk(const Chunk& other) = delete;
@@ -20,9 +24,9 @@ public:
 
     friend void swap(Chunk& first, Chunk& second);
 
-    bool isInBounds(int x, int y, int z);
-    bool blockExists(int x, int y, int z);
-    Block* getBlock(int x, int y, int z);
+    bool isInBounds(int x, int y, int z) const;
+    bool blockExists(int x, int y, int z) const;
+    Block* getBlock(int x, int y, int z) const;
     void setBlock(int x, int y, int z, Block* b);
 
     unsigned int constructLocalGeometry();

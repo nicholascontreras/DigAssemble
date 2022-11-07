@@ -11,6 +11,8 @@ public:
 
     Block(const std::string& textureName);
 
+    std::string getTextureName();
+
     void appendPosXFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
     void appendNegXFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);
     void appendPosYFace(float* geometry, unsigned int& geometrySizeUsed, const glm::mat4& translation);

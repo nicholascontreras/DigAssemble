@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "world/Chunk.h"
+#include "managers/ShaderProgramManager.h"
 
 Camera::Camera() :
     x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN), renderDistance(6) {
@@ -26,6 +27,9 @@ void Camera::setCameraPos(float newX, float newY, float newZ) {
     x = newX;
     y = newY;
     z = newZ;
+
+    ShaderProgramManager::setActiveProgram("triangle");
+    ShaderProgramManager::setVec3("cameraPos", glm::vec3(x, y, z));
 }
 
 glm::mat4 Camera::getViewMat() const {

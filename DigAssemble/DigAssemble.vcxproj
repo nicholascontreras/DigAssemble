@@ -159,15 +159,19 @@
     <ClCompile Include="src\UIText.cpp" />
     <ClCompile Include="src\world\World.cpp" />
     <ClCompile Include="src\managers\TextureMapManager.cpp" />
+    <ClCompile Include="src\world\WorldFile.cpp" />
     <ClCompile Include="src\world\worldgen\SimplexNoise.cpp" />
     <ClCompile Include="src\world\worldgen\WorldGen.cpp" />
+    <ClCompile Include="src\world\WorldStreaming.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\util\async\AsyncWorker.h" />
     <ClInclude Include="src\util\math_utils.h" />
     <ClInclude Include="src\util\async\Async.h" />
+    <ClInclude Include="src\util\str_utils.h" />
     <ClInclude Include="src\world\Biome.h" />
     <ClInclude Include="src\world\Chunk.h" />
+    <ClInclude Include="src\world\Coord.h" />
     <ClInclude Include="src\world\Player.h" />
     <ClInclude Include="src\GameWindow.h" />
     <ClInclude Include="src\Camera.h" />
@@ -182,9 +186,11 @@
     <ClInclude Include="src\managers\TextureManager.h" />
     <ClInclude Include="src\UIText.h" />
     <ClInclude Include="src\world\World.h" />
+    <ClInclude Include="src\world\WorldFile.h" />
     <ClInclude Include="src\world\worldgen\SimplexNoise.h" />
     <ClInclude Include="src\world\worldgen\WorldGen.h" />
     <ClInclude Include="src\managers\TextureMapManager.h" />
+    <ClInclude Include="src\world\WorldStreaming.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\text.frag" />

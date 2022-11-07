@@ -12,8 +12,11 @@
 #include "UIText.h"
 #include "util/FPSCounter.h"
 #include "world/worldgen/WorldGen.h"
+#include "world/WorldFile.h"
+#include "world/WorldStreaming.h"
 #include "util/math_utils.h"
 #include "util/async/AsyncWorker.h"
+#include "world/WorldFile.h"
 
 Camera GameWindow::camera;
 Player GameWindow::player;
@@ -68,24 +71,40 @@ void GameWindow::run() {
     glfwSetKeyCallback(window, keyStateChanged);
 
     ShaderProgramManager::compileProgram("triangle");
+    ShaderProgramManager::setActiveProgram("triangle");
+    ShaderProgramManager::setInt("startFogDistance", (camera.getRenderDistance() - 1) * Chunk::SIZE);
+    ShaderProgramManager::setInt("fullyFogDistance", camera.getRenderDistance() * Chunk::SIZE);
     TextureMapManager::generateTextureMap("blocks");
 
-    UIText::init();
 
+    UIText::init();
     AsyncWorker::start();
 
-    World world = WorldGen::generateNewWorld(0);
+
+    WorldStreaming::RENDER_DISTANCE = camera.getRenderDistance() + 2;
+    WorldStreaming::FILE_NAME = "world0";
+
+    bool load = false;
+    World* wp;
+    if(load) {
+        wp = new World(WorldFile::loadWorld("world0"));
+    } else {
+        wp = new World(WorldGen::generateNewWorld(0));
+    }
+    World world = World(std::move(*wp));
+    delete wp;
+
     player.setY((float)world.spawnY);
-    WorldGen::start(world, player);
+
+    WorldStreaming::start(world, player);
 
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        WorldGen::GENERATION_DISTANCE = camera.getRenderDistance();
         AsyncWorker::runCallback();
 
         if(width > 0) {
-            glClearColor(1, 1, 1, 1);
+            glClearColor(0.5f, 0.75f, 1.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             camera.setCameraPos(player.getX(), player.getY() + 1.5f, player.getZ());
@@ -114,7 +133,9 @@ void GameWindow::run() {
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    Async::killAll();
+    Async::stopAllThreads();
+
+    WorldFile::saveWorld(world, "world0");
 }
 
 int GameWindow::getWidth() {

@@ -39,18 +39,18 @@ Chunk::Chunk(Chunk&& other) noexcept : Chunk() {
     swap(*this, other);
 }
 
-bool Chunk::isInBounds(int x, int y, int z) {
+bool Chunk::isInBounds(int x, int y, int z) const {
     return x >= 0 && x < SIZE && y >= 0 && y < SIZE && z >= 0 && z < SIZE;
 }
 
-bool Chunk::blockExists(int x, int y, int z) {
+bool Chunk::blockExists(int x, int y, int z) const {
     if(!isInBounds(x, y, z)) {
         throw std::invalid_argument("Out of bounds!");
     }
     return blocks[x][y][z] != nullptr;
 }
 
-Block* Chunk::getBlock(int x, int y, int z) {
+Block* Chunk::getBlock(int x, int y, int z) const {
     if(!blockExists(x, y, z)) {
         throw std::invalid_argument("No block!");
     }
