@@ -5,6 +5,7 @@
 #include "blocks/Block.h"
 #include "Chunk.h"
 #include "Coord.h"
+#include "Player.h"
 
 class World {
 public:
@@ -24,7 +25,7 @@ public:
     bool chunkExists(int x, int y, int z) const;
     bool chunkLoaded(int x, int y, int z) const;
     Chunk* getChunk(int x, int y, int z) const;
-    void initChunk(int x, int y, int z);
+    void initChunk(int x, int y, int z, Chunk* c);
     void loadChunk(int x, int y, int z, Chunk* c);
     Chunk* unloadChunk(int x, int y, int z);
 

@@ -4,6 +4,9 @@
 
 class Player {
 public:
+
+    static const float HEIGHT, WIDTH;
+
     Player();
 
     void moveForwardBackwards(float amount);

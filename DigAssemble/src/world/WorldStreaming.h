@@ -8,7 +8,7 @@
 class WorldStreaming {
 public:
     static int RENDER_DISTANCE;
-    static std::string FILE_NAME;
+    static std::string SAVE_FOLDER_PATH;
 
     static void start(World& world, const Player& player);
 private:

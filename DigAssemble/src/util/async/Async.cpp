@@ -4,7 +4,7 @@
 
 std::mutex Async::mapMutex;
 std::map<void*, Async::CrossThreadMutex> Async::locks;
-bool Async::kill = false;
+bool Async::threadsShouldStop = false;
 
 std::vector<std::thread> Async::threads;
 
@@ -28,25 +28,21 @@ void Async::unlock(const char name[]) {
 }
 
 void Async::startThread(std::function<void()> func) {
-    threads.push_back(std::thread([func] {
-        while(!kill) {
-            func();
-        }
-    }));
+    threads.push_back(std::thread([func] { func(); }));
 }
 
 void Async::stopAllThreads() {
-    mapMutex.lock();
-    kill = true;
-    for(std::pair<void* const, CrossThreadMutex>& cur : locks) {
-        cur.second.locked = false;
-        cur.second.conditionVariable.notify_one();
-    }
-    mapMutex.unlock();
+    threadsShouldStop = true;
+}
 
+void Async::joinAllThreads() {
     for(std::thread& cur : threads) {
         cur.join();
     }
+}
+
+bool Async::runThread() {
+    return !threadsShouldStop;
 }
 
 void Async::lock(void* target) {
@@ -69,5 +65,5 @@ void Async::unlock(void* target) {
     }
     std::unique_lock ul(ctm.mutex);
     ctm.locked = false;
-    ctm.conditionVariable.notify_all();
+    ctm.conditionVariable.notify_one();
 }

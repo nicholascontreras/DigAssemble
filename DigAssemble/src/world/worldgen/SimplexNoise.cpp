@@ -26,7 +26,13 @@
 
 #include "SimplexNoise.h"
 
-#include <cstdint>  // int32_t/uint8_t
+#include <cmath>
+
+uint32_t SimplexNoise::seed = 0;
+float SimplexNoise::frequency = 1.0f;
+float SimplexNoise::amplitude = 1.0f;
+float SimplexNoise::lacunarity = 2.0f;
+float SimplexNoise::persistence = 0.5f;
 
 /**
  * Computes the largest integer value not greater than the float one
@@ -97,7 +103,11 @@ static const uint8_t perm[256] = {
  * @return 8-bits hashed value
  */
 static inline uint8_t hash(int32_t i) {
-    return perm[static_cast<uint8_t>(i)];
+    return perm[static_cast<uint8_t>(i)] ^ perm[static_cast<uint8_t>(i >> 8)];
+}
+
+static inline uint8_t hash(int32_t i, uint32_t seed) {
+    return perm[static_cast<uint8_t>(i)] ^ perm[static_cast<uint8_t>(i >> 8)] ^ static_cast<uint8_t>(seed);
 }
 
 /* NOTE Gradient table to test if lookup-table are more efficient than calculs
@@ -141,8 +151,8 @@ static float grad(int32_t hash, float x) {
  */
 static float grad(int32_t hash, float x, float y) {
     const int32_t h = hash & 0x3F;  // Convert low 3 bits of hash code
-    const float u = h < 4 ? x : y;  // into 8 simple gradient directions,
-    const float v = h < 4 ? y : x;
+    const float u = h & 4 ? x : y;  // into 8 simple gradient directions,
+    const float v = h & 4 ? y : x;
     return ((h & 1) ? -u : u) + ((h & 2) ? -2.0f * v : 2.0f * v); // and compute the dot product with (x,y).
 }
 
@@ -170,7 +180,7 @@ static float grad(int32_t hash, float x, float y, float z) {
  *
  * @param[in] x float coordinate
  *
- * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
+ * @return Noise value in the range[0; 1], value of 0.5 on all integer coordinates.
  */
 float SimplexNoise::noise(float x) {
     float n0, n1;   // Noise contributions from the two "corners"
@@ -188,17 +198,18 @@ float SimplexNoise::noise(float x) {
     float t0 = 1.0f - x0*x0;
 //  if(t0 < 0.0f) t0 = 0.0f; // not possible
     t0 *= t0;
-    n0 = t0 * t0 * grad(hash(i0), x0);
+    n0 = t0 * t0 * grad(hash(i0, seed), x0);
 
     // Calculate the contribution from the second corner
     float t1 = 1.0f - x1*x1;
 //  if(t1 < 0.0f) t1 = 0.0f; // not possible
     t1 *= t1;
-    n1 = t1 * t1 * grad(hash(i1), x1);
+    n1 = t1 * t1 * grad(hash(i1, seed), x1);
 
     // The maximum value of this noise is 8*(3/4)^4 = 2.53125
     // A factor of 0.395 scales to fit exactly within [-1,1]
-    return 0.395f * (n0 + n1);
+    // Then correct the range to [0, 1]
+    return ((0.395f * (n0 + n1)) + 1) / 2;
 }
 
 /**
@@ -206,10 +217,10 @@ float SimplexNoise::noise(float x) {
  *
  *  Takes around 150ns on an AMD APU.
  *
- * @param[in] x float coordinate
- * @param[in] y float coordinate
+ * @param[in] x int coordinate
+ * @param[in] y int coordinate
  *
- * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
+ * @return Noise value in the range[0; 1], value of 0.5 on all integer coordinates.
  */
 float SimplexNoise::noise(float x, float y) {
     float n0, n1, n2;   // Noise contributions from the three corners
@@ -253,9 +264,9 @@ float SimplexNoise::noise(float x, float y) {
     const float y2 = y0 - 1.0f + 2.0f * G2;
 
     // Work out the hashed gradient indices of the three simplex corners
-    const int gi0 = hash(i + hash(j));
-    const int gi1 = hash(i + i1 + hash(j + j1));
-    const int gi2 = hash(i + 1 + hash(j + 1));
+    const int gi0 = hash(i + hash(j, seed), seed >> 8);
+    const int gi1 = hash(i + i1 + hash(j + j1, seed), seed >> 8);
+    const int gi2 = hash(i + 1 + hash(j + 1, seed), seed >> 8);
 
     // Calculate the contribution from the first corner
     float t0 = 0.5f - x0*x0 - y0*y0;
@@ -286,18 +297,19 @@ float SimplexNoise::noise(float x, float y) {
 
     // Add contributions from each corner to get the final noise value.
     // The result is scaled to return values in the interval [-1,1].
-    return 45.23065f * (n0 + n1 + n2);
+    // Then correct the range to [0, 1]
+    return ((45.23065f * (n0 + n1 + n2)) + 1) / 2;
 }
 
 
 /**
  * 3D Perlin simplex noise
  *
- * @param[in] x float coordinate
- * @param[in] y float coordinate
- * @param[in] z float coordinate
+ * @param[in] x int coordinate
+ * @param[in] y int coordinate
+ * @param[in] z int coordinate
  *
- * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
+ * @return Noise value in the range[0; 1], value of 0.5 on all integer coordinates.
  */
 float SimplexNoise::noise(float x, float y, float z) {
     float n0, n1, n2, n3; // Noise contributions from the four corners
@@ -356,10 +368,10 @@ float SimplexNoise::noise(float x, float y, float z) {
     float z3 = z0 - 1.0f + 3.0f * G3;
 
     // Work out the hashed gradient indices of the four simplex corners
-    int gi0 = hash(i + hash(j + hash(k)));
-    int gi1 = hash(i + i1 + hash(j + j1 + hash(k + k1)));
-    int gi2 = hash(i + i2 + hash(j + j2 + hash(k + k2)));
-    int gi3 = hash(i + 1 + hash(j + 1 + hash(k + 1)));
+    int gi0 = hash(i + hash(j + hash(k, seed), seed >> 8));
+    int gi1 = hash(i + i1 + hash(j + j1 + hash(k + k1, seed), seed >> 8));
+    int gi2 = hash(i + i2 + hash(j + j2 + hash(k + k2, seed), seed >> 8));
+    int gi3 = hash(i + 1 + hash(j + 1 + hash(k + 1, seed), seed >> 8));
 
     // Calculate the contribution from the four corners
     float t0 = 0.6f - x0*x0 - y0*y0 - z0*z0;
@@ -392,12 +404,9 @@ float SimplexNoise::noise(float x, float y, float z) {
     }
     // Add contributions from each corner to get the final noise value.
     // The result is scaled to stay just inside [-1,1]
-    return 32.0f*(n0 + n1 + n2 + n3);
+    // Then correct the range to [0, 1]
+    return ((32.0f*(n0 + n1 + n2 + n3)) + 1) / 2;
 }
-
- float SimplexNoise::normalizedNoise(int x, int z, int scale, int seed) {
-     return (noise((float)x / scale, (float)z / scale, (float)seed) + 1) / 2;
- }
 
 
 /**
@@ -408,18 +417,20 @@ float SimplexNoise::noise(float x, float y, float z) {
  *
  * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
  */
-float SimplexNoise::fractal(size_t octaves, float x) const {
+float SimplexNoise::fractal(size_t octaves, int _x, int scalePow) {
+    float x = _x / powf(2, (float)scalePow);
+
     float output    = 0.f;
     float denom     = 0.f;
-    float frequency = mFrequency;
-    float amplitude = mAmplitude;
+    float frequencyL = frequency;
+    float amplitudeL = amplitude;
 
     for (size_t i = 0; i < octaves; i++) {
-        output += (amplitude * noise(x * frequency));
-        denom += amplitude;
+        output += (amplitudeL * noise(x * frequencyL));
+        denom += amplitudeL;
 
-        frequency *= mLacunarity;
-        amplitude *= mPersistence;
+        frequencyL *= lacunarity;
+        amplitudeL *= persistence;
     }
 
     return (output / denom);
@@ -429,23 +440,26 @@ float SimplexNoise::fractal(size_t octaves, float x) const {
  * Fractal/Fractional Brownian Motion (fBm) summation of 2D Perlin Simplex noise
  *
  * @param[in] octaves   number of fraction of noise to sum
- * @param[in] x         x float coordinate
- * @param[in] y         y float coordinate
+ * @param[in] x         x int coordinate
+ * @param[in] y         y int coordinate
  *
  * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
  */
-float SimplexNoise::fractal(size_t octaves, float x, float y) const {
+float SimplexNoise::fractal(size_t octaves, int _x, int _y, int scalePow) {
+    float x = _x / powf(2, (float)scalePow);
+    float y = _y / powf(2, (float)scalePow);
+
     float output = 0.f;
     float denom  = 0.f;
-    float frequency = mFrequency;
-    float amplitude = mAmplitude;
+    float frequencyL = frequency;
+    float amplitudeL = amplitude;
 
     for (size_t i = 0; i < octaves; i++) {
-        output += (amplitude * noise(x * frequency, y * frequency));
-        denom += amplitude;
+        output += (amplitudeL * noise(x * frequencyL, y * frequencyL));
+        denom += amplitudeL;
 
-        frequency *= mLacunarity;
-        amplitude *= mPersistence;
+        frequencyL *= lacunarity;
+        amplitudeL *= persistence;
     }
 
     return (output / denom);
@@ -455,24 +469,28 @@ float SimplexNoise::fractal(size_t octaves, float x, float y) const {
  * Fractal/Fractional Brownian Motion (fBm) summation of 3D Perlin Simplex noise
  *
  * @param[in] octaves   number of fraction of noise to sum
- * @param[in] x         x float coordinate
- * @param[in] y         y float coordinate
- * @param[in] z         z float coordinate
+ * @param[in] x         x int coordinate
+ * @param[in] y         y int coordinate
+ * @param[in] z         z int coordinate
  *
  * @return Noise value in the range[-1; 1], value of 0 on all integer coordinates.
  */
-float SimplexNoise::fractal(size_t octaves, float x, float y, float z) const {
+float SimplexNoise::fractal(size_t octaves, int _x, int _y, int _z, int scalePow) {
+    float x = _x / powf(2, (float)scalePow);
+    float y = _y / powf(2, (float)scalePow);
+    float z = _z / powf(2, (float)scalePow);
+
     float output = 0.f;
     float denom  = 0.f;
-    float frequency = mFrequency;
-    float amplitude = mAmplitude;
+    float frequencyL = frequency;
+    float amplitudeL = amplitude;
 
     for (size_t i = 0; i < octaves; i++) {
-        output += (amplitude * noise(x * frequency, y * frequency, z * frequency));
-        denom += amplitude;
+        output += (amplitudeL * noise(x * frequencyL, y * frequencyL, z * frequencyL));
+        denom += amplitudeL;
 
-        frequency *= mLacunarity;
-        amplitude *= mPersistence;
+        frequencyL *= lacunarity;
+        amplitudeL *= persistence;
     }
 
     return (output / denom);

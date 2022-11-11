@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-inline std::vector<std::string> split(const std::string& source, const std::string& delim) {
+inline std::vector<std::string> split(const std::string& source, const std::string& delim, bool ignoreEmptyLast = true) {
     std::vector<std::string> splitString;
 
     size_t startIndex = 0;
@@ -16,6 +16,9 @@ inline std::vector<std::string> split(const std::string& source, const std::stri
         splitString.push_back(source.substr(startIndex, delimIndex - startIndex));
         startIndex = delimIndex + delim.length();
     }
-    splitString.push_back(source.substr(startIndex));
+
+    if(!source.substr(startIndex).empty() || !ignoreEmptyLast) {
+        splitString.push_back(source.substr(startIndex));
+    }
     return splitString;
 }

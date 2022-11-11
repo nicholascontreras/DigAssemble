@@ -9,19 +9,19 @@ uniform sampler2D tex;
 uniform vec3 cameraPos;
 uniform int startFogDistance;
 uniform int fullyFogDistance;
+uniform vec3 fogColor;
 
 float getFogFactor() {
     float dist = distance(cameraPos, fragPos);
-    if (dist < startFogDistance) {
-        return 1;
-    } else if (dist > fullyFogDistance) {
-        return 0;
-    } else {
-        return (fullyFogDistance - dist) / (fullyFogDistance - startFogDistance);
-    }
+    return clamp((dist - startFogDistance) / (fullyFogDistance - startFogDistance), 0, 1);
+}
+
+vec3 applyFogToColor(vec3 baseColor) {
+    float fogFactor = getFogFactor();
+    return ((fogColor - baseColor) * fogFactor) + baseColor;
 }
 
 void main() {
     vec4 textureColor = texture(tex, texCoord);
-    color = vec4(vec3(textureColor), textureColor.a * getFogFactor());
+    color = vec4(applyFogToColor(vec3(textureColor)), textureColor.a);
 } 

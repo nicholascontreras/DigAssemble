@@ -33,13 +33,13 @@ bool World::chunkLoaded(int x, int y, int z) const {
 }
 
 Chunk* World::getChunk(int x, int y, int z) const {
-    if(!chunkExists(x, y, z)) {
-        throw std::invalid_argument("No chunk!");
+    if(!chunkLoaded(x, y, z)) {
+        throw std::invalid_argument("Chunk not loaded!");
     }
     return chunks.at(x).at(y).at(z);
 }
 
-void World::initChunk(int x, int y, int z) {
+void World::initChunk(int x, int y, int z, Chunk* c) {
     if(chunkExists(x, y, z)) {
         throw std::invalid_argument("Chunk already exists!");
     }
@@ -50,7 +50,7 @@ void World::initChunk(int x, int y, int z) {
     if(!chunks.at(x).count(y)) {
         chunks.at(x).emplace(y, std::map<int, Chunk*>());
     }
-    chunks.at(x).at(y).emplace(z, nullptr);
+    chunks.at(x).at(y).emplace(z, c);
 }
 
 void World::loadChunk(int x, int y, int z, Chunk* c) {
@@ -102,16 +102,16 @@ std::unordered_map<Coord, Chunk*> World::allChunks() const {
 void World::draw() {
     TextureMapManager::bindTextureMap("blocks");
 
-    std::unordered_map<Coord, Chunk*> lc = loadedChunks();
-    std::for_each(lc.begin(), lc.end(), [&](std::pair<Coord, Chunk*> c) {
-        glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), glm::vec3(c.first.x * Chunk::SIZE, c.first.y * Chunk::SIZE, c.first.z * Chunk::SIZE));
-        ShaderProgramManager::setActiveProgram("triangle");
-        ShaderProgramManager::setMat4("model", modelMat);
+    synchronized(*this) {
+        std::unordered_map<Coord, Chunk*> lc = loadedChunks();
+        std::for_each(lc.begin(), lc.end(), [&](std::pair<Coord, Chunk*> c) {
+            glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), glm::vec3(c.first.x * Chunk::SIZE, c.first.y * Chunk::SIZE, c.first.z * Chunk::SIZE));
+            ShaderProgramManager::setActiveProgram("triangle");
+            ShaderProgramManager::setMat4("model", modelMat);
 
-        Async::lock(*this);
-        c.second->draw();
-        Async::unlock(*this);
-    });
+            c.second->draw();
+        });
+    }
 }
 
 void swap(World& first, World& second) {

@@ -164,5 +164,6 @@
     <None Include="shaders\text.frag" />
     <None Include="shaders\triangle.frag" />
     <None Include="shaders\triangle.vert" />
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

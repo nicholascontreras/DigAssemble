@@ -7,7 +7,7 @@
 
 class Chunk {
 public:
-    static const int SIZE = 20;
+    static const int SIZE = 24;
 
     static int at(float a);
 

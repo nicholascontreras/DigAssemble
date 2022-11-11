@@ -8,23 +8,33 @@ std::queue<AsyncWorker::QueuedCallback> AsyncWorker::callbackQueue;
 
 void AsyncWorker::start() {
     Async::startThread([] {
-        Async::lock(workQueue);
-        if(workQueue.empty()) {
-            Async::unlock(workQueue);
-        } else {
-            QueuedWork qw = workQueue.front();
-            workQueue.pop();
-            Async::unlock(workQueue);
+        while(Async::runThread() || !workQueue.empty()) {
 
-            void* result = qw.work();
+            Async::lock(workQueue);
+            if(workQueue.empty()) {
+                Async::unlock(workQueue);
+            } else {
+                QueuedWork qw = workQueue.front();
+                workQueue.pop();
+                Async::unlock(workQueue);
 
-            synchronized(callbackQueue) {
-                callbackQueue.push({ qw.callback, result });
+                void* result = qw.work();
+
+                synchronized(callbackQueue) {
+                    callbackQueue.push({ qw.callback, result });
+                }
             }
-        }
 
-        std::this_thread::yield();
+            std::this_thread::yield();
+        }
     });
+}
+
+void AsyncWorker::runOnMain(std::function<void()> func) {
+    std::function<void(void*)> wrappedFunc = [func = std::move(func)](void*) { func(); };
+    synchronized(callbackQueue) {
+        callbackQueue.push({ wrappedFunc, nullptr });
+    }
 }
 
 void AsyncWorker::runCallback() {
@@ -47,5 +57,15 @@ bool AsyncWorker::isGLThread() {
 void AsyncWorker::ensureGLThread() {
     if(!isGLThread()) {
         throw std::runtime_error("The current thread is not the GL thread!");
+    }
+}
+
+void AsyncWorker::finalizeAll() {
+    if(Async::runThread()) {
+        throw std::runtime_error("Cannot finalize when thread should still be running!");
+    }
+
+    while(!callbackQueue.empty()) {
+        runCallback();
     }
 }

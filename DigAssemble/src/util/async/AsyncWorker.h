@@ -23,10 +23,14 @@ public:
         Async::unlock(workQueue);
     }
 
+    static void runOnMain(std::function<void()> func);
+
     static void runCallback();
 
     static bool isGLThread();
     static void ensureGLThread();
+
+    static void finalizeAll();
 private:
     struct QueuedWork {
         std::function<void*()> work;

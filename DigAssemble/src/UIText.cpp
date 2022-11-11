@@ -56,7 +56,7 @@ void UIText::init() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     
-        ShaderProgramManager::compileProgram("text");
+    ShaderProgramManager::compileProgram("text");
 }
 
 void UIText::drawText(const std::string& text, int x,  int y, int size, const glm::vec3& textColor) {
@@ -103,8 +103,7 @@ void UIText::drawText(const std::string& text, int x,  int y, int size, const gl
 bool UIText::loadChar(const FT_Face& fontFace, const char& c) {
     // load character glyph 
     if(FT_Load_Char(fontFace, c, FT_LOAD_RENDER)) {
-        Debug("ERROR::FREETYTPE: Failed to load Glyph");
-        return false;
+        throw std::runtime_error("Failed to load char!");
     }
 
     std::string textureName = TEXTURE_PREFIX;

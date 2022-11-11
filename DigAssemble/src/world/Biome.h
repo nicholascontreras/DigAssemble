@@ -6,10 +6,11 @@ struct Biome {
     enum class BiomeType {
         GRASSLANDS,
         MOUNTAINS,
+        DESERT,
         NUM_BIOME_TYPES
     };
     
-    static Biome at(int x, int z, int seed);
+    static Biome at(int x, int z);
 
     const BiomeType biomeType;
     const float strength;

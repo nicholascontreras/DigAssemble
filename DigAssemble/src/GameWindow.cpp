@@ -18,8 +18,9 @@
 #include "util/async/AsyncWorker.h"
 #include "world/WorldFile.h"
 
-Camera GameWindow::camera;
 Player GameWindow::player;
+Camera GameWindow::camera;
+
 
 int GameWindow::width = 800, GameWindow::height = 600;
 float GameWindow::mouseX = NAN, GameWindow::mouseY = NAN;
@@ -48,15 +49,15 @@ void GameWindow::run() {
         throw std::runtime_error("Failed to initialize GLAD!");
     }
 
-    Debug(glGetString(GL_VERSION));
+    Debug("OpenGL version ", glGetString(GL_VERSION));
 
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(handleError, nullptr);
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -74,22 +75,22 @@ void GameWindow::run() {
     ShaderProgramManager::setActiveProgram("triangle");
     ShaderProgramManager::setInt("startFogDistance", (camera.getRenderDistance() - 1) * Chunk::SIZE);
     ShaderProgramManager::setInt("fullyFogDistance", camera.getRenderDistance() * Chunk::SIZE);
+    ShaderProgramManager::setVec3("fogColor", glm::vec3(0.5f, 0.75f, 1.0f));
     TextureMapManager::generateTextureMap("blocks");
-
 
     UIText::init();
     AsyncWorker::start();
 
-
     WorldStreaming::RENDER_DISTANCE = camera.getRenderDistance() + 2;
-    WorldStreaming::FILE_NAME = "world0";
+    WorldStreaming::SAVE_FOLDER_PATH = "C:/Users/rf741f/Desktop/saves/world0";
 
     bool load = false;
     World* wp;
     if(load) {
-        wp = new World(WorldFile::loadWorld("world0"));
+        wp = new World(WorldFile::loadWorld("C:/Users/rf741f/Desktop/saves/world0"));
     } else {
-        wp = new World(WorldGen::generateNewWorld(0));
+        WorldGen::setSeed(0);
+        wp = new World(WorldGen::generateNewWorld());
     }
     World world = World(std::move(*wp));
     delete wp;
@@ -130,12 +131,14 @@ void GameWindow::run() {
         FPSCounter::delayForFPS(60);
     }
 
+    Async::stopAllThreads();
+    AsyncWorker::finalizeAll();
+    Async::joinAllThreads();
+
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    Async::stopAllThreads();
-
-    WorldFile::saveWorld(world, "world0");
+    //WorldFile::saveWorld(world, "C:/Users/rf741f/Desktop/saves/world0");
 }
 
 int GameWindow::getWidth() {

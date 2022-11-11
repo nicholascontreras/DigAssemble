@@ -5,6 +5,7 @@
 #include <glad/gl.h>
 #include <glfw/glfw3.h>
 
+#include "world/World.h"
 #include "Camera.h"
 #include "world/Player.h"
 
@@ -15,8 +16,8 @@ public:
     static int getWidth();
     static int getHeight();
 private:
-    static Camera camera;
     static Player player;
+    static Camera camera;
 
     static int width, height;
 
