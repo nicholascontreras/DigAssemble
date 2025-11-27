@@ -16,7 +16,6 @@
 #include "world/WorldStreaming.h"
 #include "util/math_utils.h"
 #include "util/async/AsyncWorker.h"
-#include "world/WorldFile.h"
 
 Player GameWindow::player;
 Camera GameWindow::camera;
@@ -82,12 +81,12 @@ void GameWindow::run() {
     AsyncWorker::start();
 
     WorldStreaming::RENDER_DISTANCE = camera.getRenderDistance() + 2;
-    WorldStreaming::SAVE_FOLDER_PATH = "C:/Users/rf741f/Desktop/saves/world0";
+    WorldStreaming::SAVE_FOLDER_PATH = "C:/Users/Nicholas/Desktop/saves/world0";
 
     bool load = false;
     World* wp;
     if(load) {
-        wp = new World(WorldFile::loadWorld("C:/Users/rf741f/Desktop/saves/world0"));
+        wp = new World(WorldFile::loadWorld("C:/Users/Nicholas/Desktop/saves/world0"));
     } else {
         WorldGen::setSeed(0);
         wp = new World(WorldGen::generateNewWorld());

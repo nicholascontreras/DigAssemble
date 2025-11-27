@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include <stb_image.h>
+#include <stb_image/stb_image.h>
 #include <glad/gl.h>
 
 std::unordered_map<std::string, unsigned int> TextureManager::textures;

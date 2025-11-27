@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include <stb_image.h>
+#include <stb_image/stb_image.h>
 #include <algorithm> 
 #include <stdexcept>
 #include "TextureManager.h"
