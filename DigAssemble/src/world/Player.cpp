@@ -9,7 +9,7 @@
 const float Player::HEIGHT = 1.9f, Player::WIDTH = 0.8f;
 
 
-Player::Player() : x(0.5f), y(NAN), z(0.5f), angleLR(NAN) {
+Player::Player() : x(8.0f), y(NAN), z(8.0f), angleLR(NAN) {
 }
 
 void Player::moveForwardBackwards(float amount) {

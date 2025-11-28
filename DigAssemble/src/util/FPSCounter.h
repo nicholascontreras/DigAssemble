@@ -4,12 +4,18 @@
 
 class FPSCounter {
 public:
-    static void recordFrame();
+    static void recordFrameStart();
+    static double getAvgBusyTime();
     static double getAvgFrameTime();
-    static double getPrevFrameTime();
     static int getFPS();
     static void delayForFPS(int fps);
 private:
+    struct TimeRecord {
+        double time;
+        double busyTime;
+    };
+
     static double MAX_HISTORY_AGE;
-    static std::list<double> timestamps;
+    static double frameStartTime;
+    static std::list<TimeRecord> history;
 };

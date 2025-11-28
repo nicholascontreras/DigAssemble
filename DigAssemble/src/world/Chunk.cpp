@@ -159,5 +159,6 @@ void swap(Chunk& first, Chunk& second) {
 
     swap(first.blocks, second.blocks);
     swap(first.vao, second.vao);
+    swap(first.vbo, second.vbo);
     swap(first.vertexCount, second.vertexCount);
 }

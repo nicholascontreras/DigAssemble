@@ -11,8 +11,9 @@ public:
     void rotateLR(float amount);
     void rotateUD(float amount);
 
-    inline float getAngleLR() { return angleLR; };
-    inline int getRenderDistance() { return renderDistance; };
+    inline float getAngleLR() const { return angleLR; };
+    inline float getAngleUD() const { return angleUD; };
+    inline int getRenderDistance() const { return renderDistance; };
 
     void setCameraPos(float newX, float newY, float newZ);
 

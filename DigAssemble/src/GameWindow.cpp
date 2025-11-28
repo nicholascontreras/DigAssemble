@@ -62,6 +62,8 @@ void GameWindow::run() {
 
     glViewport(0, 0, width, height);
 
+    glfwSwapInterval(0);
+
     glfwSetFramebufferSizeCallback(window, windowSizeChanged);
     camera.setAspectRatio((float)width / height);
 
@@ -80,7 +82,7 @@ void GameWindow::run() {
     UIText::init();
     AsyncWorker::start();
 
-    WorldStreaming::RENDER_DISTANCE = camera.getRenderDistance() + 2;
+    WorldStreaming::CHUNK_LOAD_DISTANCE = camera.getRenderDistance() + 2;
     WorldStreaming::SAVE_FOLDER_PATH = "C:/Users/Nicholas/Desktop/saves/world0";
 
     bool load = false;
@@ -99,8 +101,8 @@ void GameWindow::run() {
     WorldStreaming::start(world, player);
 
     while(!glfwWindowShouldClose(window)) {
+        FPSCounter::recordFrameStart();
         glfwPollEvents();
-
         AsyncWorker::runCallback();
 
         if(width > 0) {
@@ -117,16 +119,18 @@ void GameWindow::run() {
             world.draw();
 
             UIText::drawText("FPS: " + std::to_string(FPSCounter::getFPS()), 10, 20, 20, glm::vec3(0.0f, 0.0f, 0.0f));
-            UIText::drawText("X: " + std::to_string(player.getX()), 10, 40, 20, glm::vec3(0.0f, 0.0f, 0.0f));
-            UIText::drawText("Y: " + std::to_string(player.getY()), 10, 60, 20, glm::vec3(0.0f, 0.0f, 0.0f));
-            UIText::drawText("Z: " + std::to_string(player.getZ()), 10, 80, 20, glm::vec3(0.0f, 0.0f, 0.0f));
-            UIText::drawText("A: " + std::to_string(camera.getAngleLR()), 10, 100, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("FT: " + std::to_string(FPSCounter::getAvgFrameTime() * 1000), 10, 40, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("BT: " + std::to_string(FPSCounter::getAvgBusyTime() * 1000), 10, 60, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("X: " + std::to_string(player.getX()), 10, 80, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("Y: " + std::to_string(player.getY()), 10, 100, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("Z: " + std::to_string(player.getZ()), 10, 120, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("A: " + std::to_string(camera.getAngleLR()), 10, 140, 20, glm::vec3(0.0f, 0.0f, 0.0f));
+            UIText::drawText("E: " + std::to_string(camera.getAngleUD()), 10, 160, 20, glm::vec3(0.0f, 0.0f, 0.0f));
 
             glfwSwapBuffers(window);
             handleContinuousKeys(window);
         }
 
-        FPSCounter::recordFrame();
         FPSCounter::delayForFPS(60);
     }
 

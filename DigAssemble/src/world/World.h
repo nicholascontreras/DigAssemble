@@ -29,6 +29,8 @@ public:
     void loadChunk(int x, int y, int z, Chunk* c);
     Chunk* unloadChunk(int x, int y, int z);
 
+    Block* getBlock(int x, int y, int z) const;
+
     std::unordered_map<Coord, Chunk*> loadedChunks() const;
     std::unordered_map<Coord, Chunk*> allChunks() const;
 

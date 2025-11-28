@@ -4,9 +4,10 @@
 
 #include "world/Chunk.h"
 #include "managers/ShaderProgramManager.h"
+#include "util/math_utils.h"
 
 Camera::Camera() :
-    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN), renderDistance(3) {
+    x(NAN), y(NAN), z(NAN), angleLR(0), angleUD(0), aspectRatio(NAN), renderDistance(4) {
 }
 
 void Camera::setAspectRatio(float newAspectRatio) {
@@ -15,7 +16,7 @@ void Camera::setAspectRatio(float newAspectRatio) {
 
 void Camera::rotateLR(float amount) {
     angleLR += amount;
-    angleLR = fmodf(angleLR, 360);
+    angleLR = loopMod(angleLR, 360);
 }
 
 void Camera::rotateUD(float amount) {
@@ -42,5 +43,5 @@ glm::mat4 Camera::getViewMat() const {
 }
 
 glm::mat4 Camera::getProjectionMat() const {
-    return glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, (float)renderDistance * Chunk::SIZE);
+    return glm::perspective(glm::radians(90.0f), aspectRatio, 0.1f, (float)renderDistance * Chunk::SIZE);
 }

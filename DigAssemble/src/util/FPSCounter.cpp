@@ -4,49 +4,53 @@
 
 #include <thread>
 
+#include "debug.h"
+
 double FPSCounter::MAX_HISTORY_AGE = 1;
-std::list<double> FPSCounter::timestamps;
+double FPSCounter::frameStartTime;
+std::list<FPSCounter::TimeRecord> FPSCounter::history;
 
-void FPSCounter::recordFrame() {
-    double time = glfwGetTime();
-    timestamps.push_back(time);
+void FPSCounter::recordFrameStart() {
+    frameStartTime = glfwGetTime();
+}
 
-    while(timestamps.front() < time - MAX_HISTORY_AGE) {
-        timestamps.pop_front();
+double FPSCounter::getAvgBusyTime() {
+    if (history.empty()) {
+        return 0;
+    } else {
+        double sumOfBusyTimes = 0;
+        for (TimeRecord tr : history) {
+            sumOfBusyTimes += tr.busyTime;
+        }
+        return sumOfBusyTimes / history.size();
     }
 };
 
 double FPSCounter::getAvgFrameTime() {
-    if(timestamps.size() < 2) {
+    if(history.size() < 2) {
         return 0;
     } else {
-        return (timestamps.back() - timestamps.front()) / timestamps.size();
-    }
-};
-
-double FPSCounter::getPrevFrameTime() {
-    if(timestamps.size() < 2) {
-        return 0;
-    } else {
-        return timestamps.back() - *std::prev(std::prev(timestamps.end()));
+        return (history.back().time - history.front().time) / (history.size() - 1);
     }
 };
 
 int FPSCounter::getFPS() {
-    if(timestamps.size() < 2) {
+    if(history.size() < 2) {
         return 0;
     } else {
-        return (int)(1 / getAvgFrameTime());
+        return (int) round(1 / getAvgFrameTime());
     }
 };
 
 void FPSCounter::delayForFPS(int fps) {
-    double targetFrameTime = 1.0 / fps;
-    double actualFrameTime = getPrevFrameTime();
+    double delayStartTime = glfwGetTime();
+    double targetDelayEndTime = frameStartTime + (1.0 / fps);
 
-    if (actualFrameTime < targetFrameTime) {
-        double delay = targetFrameTime - actualFrameTime;
-        int nanoseconds = (int)(delay * 1000000000);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(nanoseconds));
+    while (true) {
+        double curTime = glfwGetTime();
+        if (curTime >= targetDelayEndTime) {
+;           history.push_back({curTime, delayStartTime - frameStartTime});
+            return;
+        }
     }
 };

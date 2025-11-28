@@ -73,6 +73,14 @@ Chunk* World::unloadChunk(int x, int y, int z) {
     return c;
 }
 
+Block* World::getBlock(int x, int y, int z) const {
+    int cx = Chunk::at(x);
+    int cy = Chunk::at(x);
+    int cz = Chunk::at(x);
+
+    return getChunk(cx, cy, cz)->getBlock(loopMod(x, Chunk::SIZE), loopMod(y, Chunk::SIZE), loopMod(z, Chunk::SIZE));
+}
+
 std::unordered_map<Coord, Chunk*> World::loadedChunks() const {
     std::unordered_map<Coord, Chunk*> lc;
     for(const auto& x : chunks) {
